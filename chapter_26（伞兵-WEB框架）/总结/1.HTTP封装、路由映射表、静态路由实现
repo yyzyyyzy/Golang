@@ -1,0 +1,72 @@
+总结：
+1.http.ListenAndServe(":9999", nil)
+    第一个参数是 地址，:9999表示在 9999 端口监听。
+    第二个参数是 代表处理所有的HTTP请求的实例，handler 是一个接口，只要实现了 ServerHTTP 接口的实例，所有的HTTP请求，就都交给了该实例处理了。
+
+2.func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) { ... }
+    第一个参数是 ResponseWriter接口 ，利用 ResponseWriter 可以构造针对该请求的响应,
+    第二个参数是 Request结构体，该对象包含了该HTTP请求的所有的信息，比如请求地址、Header和Body等信息，使用指针是可以节省空间
+
+3.HandlerFunc用来提供给用户使用，用来定义路由映射的处理方法
+
+4.Engine结构体中router为路由映射表，key为请求方法和静态路由，value为用户映射的处理方法HandlerFunc
+
+------------------------------------------------------------------------------------------------------------------------
+package gee
+
+import (
+	"fmt"
+	"net/http"
+)
+
+type HandlerFunc func(http.ResponseWriter, *http.Request)
+
+type Engine struct {
+	router map[string]HandlerFunc //路由映射表
+}
+
+func New() *Engine {
+	return &Engine{router: make(map[string]HandlerFunc)}
+}
+
+func (engine *Engine) addRoute(method string, pattern string, handler HandlerFunc) {
+	key := method + "-" + pattern //GET-/hello
+	engine.router[key] = handler //静态路由
+}
+
+func (engine *Engine) GET(pattern string, handler HandlerFunc) {
+	engine.addRoute("GET", pattern, handler)
+}
+
+func (engine *Engine) POST(pattern string, handler HandlerFunc) {
+	engine.addRoute("POST", pattern, handler)
+}
+
+func (engine *Engine) Run(addr string) (err error) {
+	return http.ListenAndServe(addr, engine)
+}
+
+func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	key := req.Method + "-" + req.URL.Path
+	if handler, ok := engine.router[key]; ok {
+		handler(w, req)
+	} else {
+		fmt.Fprintf(w, "404 NOT FOUND: %s\n", req.URL)
+	}
+}
+
+
+func main() {
+    r := New("/", func(writer http.ResponseWriter, request *http.Request) {
+        writer.Write([]byte("伞兵一号卢本伟准备就绪"))
+    })
+    r.GET("/", func(writer http.ResponseWriter, request *http.Request) {
+    		writer.Write([]byte("伞兵一号卢本伟准备就绪"))
+    	})
+    r.POST("/hello", func(writer http.ResponseWriter, request *http.Request) {
+    	    writer.Write([]byte("给阿姨倒一杯卡布奇诺"))
+    })
+    r.Run(":8080")
+}
+
+

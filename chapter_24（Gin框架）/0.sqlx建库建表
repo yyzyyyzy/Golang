@@ -1,0 +1,12 @@
+create database CBB;
+
+use CBB;
+
+create table user(
+                       ID int primary key auto_increment,
+                       Name varchar(20) not null,
+                       Password varchar(255) not null,
+                       Phone varchar(11) not null unique
+);
+
+SELECT * FROM user where phone = 13610850940;

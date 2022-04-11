@@ -1,0 +1,4 @@
+import (
+	_ "github.com/go-25.查询三表，排名前三-driver/mysql" //go-mysql 驱动
+	"github.com/jmoiron/sqlx" //安装sqlx orm框架
+)

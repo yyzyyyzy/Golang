@@ -1,0 +1,22 @@
+list 实现了一个双向链表，链表不需要实现heap 类似的接口，可以直接使用。
+
+1.链表的构造：
+    func New() *List {}     // 返回一个链表对象
+2.链表的操作方法：
+    func (l *List) Len() int {}                                                 // 返回链表的长度
+    func (l *List) Front() *Element {}                                          // 返回链表中的第一个元素
+    func (l *List) Back() *Element {}                                           // 返回链表中的末尾元素
+    func (l *List) Remove(e *Element) interface{} {}                            // 移除链表中的某个元素
+    func (l *List) PushFront(v interface{}) *Element {}                         // 在表头插入值为 v 的元素
+    func (l *List) PushBack(v interface{}) *Element {}                          // 在表尾插入值为 v 的元素
+    func (l *List) InsertBefore(v interface{}, mark *Element) *Element {}       // 在mark之前插入值为v 的元素
+    func (l *List) InsertAfter(v interface{}, mark *Element) *Element {}        // 在mark 之后插入值为 v 的元素
+    func (l *List) MoveToFront(e *Element) {}                                   // 移动e某个元素到表头
+    func (l *List) MoveToBack(e *Element) {}                                    // 移动e到队尾
+    func (l *List) MoveBefore(e, mark *Element) {}                              // 移动e到mark之前
+    func (l *List) MoveAfter(e, mark *Element) {}                               // 移动e 到mark 之后
+    func (l *List) PushBackList(other *List) {}                                 // 追加到队尾
+    func (l *List) PushFrontList(other *List) {}                                // 将链表list放在队列前
+3.链表的遍历：
+    func (e *Element) Next() *Element {}    // 返回下一个元素
+    func (e *Element) Prev() *Element {}    // 返回上一个元素

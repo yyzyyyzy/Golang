@@ -1,0 +1,118 @@
+ch = make(chan int, 5)
+
+ch是存在于函数栈帧上的一个指针，指向堆上的hchan数据结构:
+    type hchan struct {
+        qcount   uint           // 已经存储了几个元素
+        dataqsiz uint           // 缓冲区最多存储多少元素
+        buf      unsafe.Pointer // 指向缓冲区的指针地址
+        elemsize uint16         // 每个元素占多大空间
+        closed   uint32         // 记录关闭的状态
+        elemtype *_type // 指向元素类型的元数据
+        sendx    uint   // 读下标的位置
+        recvx    uint   // 写下标的位置
+        recvq    waitq  // 发送队列（写）
+        sendq    waitq  // 接收队列（读），sudog链表
+        lock     mutex  //互斥锁
+    }
+1.由于channel需要在协程间并发访问，所以需要mutex lock互斥锁保护数据结构
+2.对于有缓冲的channel来说，需要知道buf（缓冲区的指针地址），qcount（已经存储了多少个元素），dataqsiz（最多存储多少个元素），elemsize（每个元素占多大空间）
+3.所以缓冲区就是一个数组，golang运行时，内存复制，垃圾回收等机制依赖数据的类型信息，所以hchan有一个elemtype指针（指向元素类型的元数据）
+4.channel支持交替读（接收）写（发送），需要记录读、写下标的位置，当读写不能立即完成时，需要让当前协程在channel上等待，要能立刻唤醒等待的协程
+5.channel能够close，需要用close记录关闭状态
+
+ch = make(chan int, 5)
+go func1 () {
+    ch <- 1
+    ch <- 2
+    ch <- 3
+    ch <- 4
+    ch <- 5
+    ch <- 6
+}
+
+go func2() {
+    <- ch
+}
+
+
+1.ch缓冲区容量为5，内容为空，读写下标sendx、recvx指向下标为0的位置，等待队列sendq、recvq也为空。
+2.协程g1向ch发送数据，5个数字放入缓冲区，sendx重新回到下标为0的位置，数据6无处可放，
+  g1进入发送等待队列sendq中（sudog类型的链表，记录哪个协程在等待，等待哪个channel，等待发送的数据在哪儿....）
+3.协程g2从ch接收一个元素，recvx指向下标为1的位置，第0个位置可以存储数据6，会唤醒sendq的g1协程，将数据发送给ch，缓冲区又满了
+
+由于sendx和recvx都会从0到4再到0，所以channel的缓冲区是环形缓冲区。
+
+发送数据的写法：
+阻塞式channel：
+ch <- 10
+
+非阻塞式channel：
+select {
+case ch <- 10:
+ ...
+default:
+ ...
+}
+
+接收数据的写法：
+阻塞式channel：
+<-ch（丢弃结果）
+v := <-ch（结果赋值给变量v）
+v, ok := <-ch（ok为false，ch关闭）
+
+非阻塞式：
+select {
+case <-ch:
+ ...
+default:
+ ...
+}
+
+------------------------------------------------------------------------------------------------------------------------
+channel底层实现：
+1.例如ch=make(chan int, 5)，堆上分配hchan结构体，栈上存储指针
+    type hchan struct {
+        qcount   uint           // 已经存储了几个元素
+        dataqsiz uint           // 缓冲区最多存储多少元素
+        buf      unsafe.Pointer // 指向缓冲区的指针地址
+        elemsize uint16         // 每个元素占多大空间
+        closed   uint32         // 记录关闭的状态
+        elemtype *_type         // 指向元素类型的元数据
+        sendx    uint           // 读下标的位置
+        recvx    uint           // 写下标的位置
+        recvq    waitq          // 发送队列（写），sudog双向链表
+        sendq    waitq          // 接收队列（读），sudog双向链表
+        lock     mutex          //互斥锁
+        }
+
+    1.buf是带缓冲的channle所特有的结构，是个循环链表，用来存储缓存数据
+    2.sendx和recvx是用于记录buf中发送和接收的index
+    3.lock是个互斥锁，目的是为了保证goroutine以先进先出FIFO的方式进入结构体
+    4.recvq和sendq分别是往channel接收或发送数据的goroutine所抽象出来的数据结构，是个双向链表
+
+2.channel存储满了，底层如何处理的？
+    1.goroutine的阻塞操作，实际上是调用send (ch <- xx)或者recv ( <-ch)主动触发的
+    2.G1存储满了chan，那么会让G1进行阻塞等待，让出占用的M给本地队列中的其他G，同时，G1也会被抽象成含有G1指针和send元素的sudog结构体，
+      保存到*sendq中等待被唤醒，在有其他协程(G2)接收数据后被唤醒
+
+
+------------------------------------------------------------------------------------------------------------------------
+select底层实现
+0.select 在 Go 语言的源代码中不存在对应的结构体，但是我们使用 runtime.scase 结构体表示 select 控制结构中的 case：
+    type scase struct {
+        c    *hchan         // chan
+        elem unsafe.Pointer // data element
+    }
+1.空的 select 语句会被转换成调用 runtime.block 直接挂起当前 Goroutine；
+2.如果 select 语句中只包含一个 case，编译器会将其转换成 if ch == nil { block }; n; 表达式；
+    首先判断操作的 Channel 是不是空的；
+    然后执行 case 结构中的内容；
+3.如果 select 语句中只包含两个 case 并且其中一个是 default，那么会使用 runtime.selectnbrecv 和 runtime.selectnbsend 非阻塞地执行收发操作；
+4.在默认情况下会通过 runtime.selectgo 获取执行 case 的索引，并通过多个 if 语句执行对应 case 中的代码；
+5.在编译器已经对 select 语句进行优化之后，Go 语言会在运行时执行编译期间展开的 runtime.selectgo 函数，该函数会按照以下的流程执行：
+    1.随机生成一个遍历的轮询顺序 pollOrder 并根据 Channel 地址生成锁定顺序 lockOrder；
+    2.根据 pollOrder 遍历所有的 case 查看是否有可以立刻处理的 Channel；
+        1)如果存在，直接获取 case 对应的索引并返回；
+        2)如果不存在，创建 runtime.sudog 结构体，将当前 Goroutine 加入到所有相关 Channel 的收发队列，
+          并调用 runtime.gopark 挂起当前 Goroutine 等待调度器的唤醒；
+    3.当调度器唤醒当前 Goroutine 时，会再次按照 lockOrder 遍历所有的 case，从中查找需要被处理的 runtime.sudog 对应的索引；

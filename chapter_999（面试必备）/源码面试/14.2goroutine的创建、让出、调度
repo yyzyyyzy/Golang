@@ -1,0 +1,48 @@
+func hello(name string) {
+    fmt.Println("hello", name)
+}
+
+func main() {
+    name := "Goroutine"
+    go hello(name)
+}
+
+main goroutine执行后调用main.main，再次创建一个hello goroutine，newproc函数负责调用
+newproc函数调用过程：（func newproc(siz int32, fn *funcval)参数一：传递给协程入口函数的参数占用字节数，参数二：协程入口函数对应的funcval指针）
+                 1.先入栈fn=&hello funcval（hello函数对应的funcval指针），再入栈参数大小siz=16（string类型64位下占16字节）
+                 2.同时将传递给协程入口函数的参数name放在第二个参数之后
+                 3.调用者newproc函数需要切换到g0栈（协程栈比线程栈小很多，g0栈分配在线程栈上，空间比较大，且支持栈增长，可以防止栈溢出）
+                   调用newproc1函数：
+
+                   func newproc(siz int32, fn *funcval) {
+                   	argp := add(unsafe.Pointer(&fn), sys.PtrSize)
+                   	gp := getg()
+                   	pc := getcallerpc()
+                   	systemstack(func() {
+                   		newg := newproc1(fn, argp, siz, gp, pc)
+
+                           1.fn和siz是newproc接收的参数，fn是协程入口地址、参数占用内存大小
+                           2.argp用来定位到协程入口函数的参数name的地址
+                           3.gp是父协程main goroutine的指针，是main goroutine的g指针
+                           4.pc得到的是newproc函数调用结束后的返回地址
+
+                           所以newproc1是用来创建一个协程，
+                           1.newproc1首先通过acpuirem禁止当前m被抢占（接下来执行的程序中，可能会把当前p保存到局部变量中，
+                             如果此时m被抢占，p关联到别的m，等到再次恢复的时候，继续使用这个局部变量里保存的p，会造成数据不一致的问题）
+                           2.然后会尝试获取一个空闲的g，如果当前p和调度器中都没有空闲的p，那就创建一个并添加到全局变量allgs中，
+                             这个新创建的协程是hello goroutine，此时的状态是_Gdead，拥有属于自己的协程栈。
+                           3.如果协程入口函数有参数，就把参数移动到协程栈上，把main goroutine的参数空间栈帧的name拷贝到hello goroutine
+                             局部变量栈帧，
+                           4.接下来把goexit函数的地址加一，压入协程栈的返回地址空间（&goexit + 1），
+                           5.再把hello goroutine对应的g： startpc置为协程入口函数起始地址，
+                             gopc置为父协程调用newproc后的返回地址（pc参数地址），g.sched结构体用于保存现场，
+                             g.sched.sp置为协程栈指针，g.sched.pc指向协程入口函数的起始地址
+
+hello gorotine的协程栈：name是参数，返回值空间：&goexit + 1，hello函数栈帧
+
+相当于在goexit函数中调用了函数hello，传递了参数，指令跳转到hello函数的入口处，并没开始执行的状态！
+当hello协程需要执行的时候，通过g.sched恢复现场，就会从hello函数入口开始执行了，hello函数结束后会返回到goexit函数中，执行协程资源回收
+newproc1函数会给新建的hello goroutine赋予一个唯一id，給唯一id赋值前，会把协程状态置为_Grunnable，这个状态意味着hello goroutine
+可以进入本地队列runq，接下来会调用runqput，把hello goroutine放入当前p的本地队列中，如果当前有空闲的p，没有处于自旋状态的m
+
+

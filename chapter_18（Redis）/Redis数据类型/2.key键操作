@@ -1,0 +1,21 @@
+keys * //显示所有键，慎用，数据量大时导致卡死
+keys a* // 显示所有以a开头的键
+exists name age //判断name和age这两个键存在几个
+type name //查看值的类型
+del name age //删除键
+expire name 30 //name键值30秒过期
+ttl name //查看键值的过期时间
+persist name // 取消键的过期时间
+rename name nickname // 重命名键（这样做不安全，容易覆盖已有数据）
+renamenx name nickname // 确保不会覆盖其它键才重命名（nx=not exists,x后缀=exists）
+
+expireat name 1548042602 //设置name过期的具体时间点（格林威治秒）
+move name 1 //将name移动到1号数据库
+pexpire name 5000 //将name的过期设置为5000毫秒
+pexpireat name 1548042602000 //设置name的过期时间为格林威治时间毫秒
+pttl name //获取name的有效毫秒数
+randomkey //返回一个随机的key
+sort mlist //对列表排序（升序）
+sort mlist desc //对列表降序排序
+sort mlist limit 0 5 desc //对列表降序排序取前5
+sort mlist alpha desc //对含字符的列表降序排序

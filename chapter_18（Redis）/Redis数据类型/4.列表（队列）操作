@@ -1,0 +1,11 @@
+lpush mlist 2 // 从左侧向列表mlist追加元素2
+rpush mlist 3 // 从右侧向列表mlist追加元素3
+linsert mlist after 3 4 // 在列表mlist中3的后边追加元素4
+lset mlist 1 200 // 设置列表mlist中的第1个元素为200（下标从0开始）
+lrange mlist 0 3 // 查看列表mlist中下标[0到3]的元素
+lrange mlist 0 -1 //从头看到尾
+lpop mlist // 从列表左侧弹出一个值
+rpop mlist // 从列表右侧弹出一个值
+ltrim mlist 0 1 // 修剪掉mlist下标[0,1]以外的元素
+llen mlist // 列表元素个数
+lindex mlist 0 // 获取mlist中下标0的元素

@@ -1,0 +1,17 @@
+-- group by(字段分组：为了按组统计)
+-- having（统计字段的筛选）
+-- count() max() min() avg() sum()...统计函数
+
+-- 查询中国各省有多少地级市, 降序取前五名
+select ProID,count(CityID) as cities from t_city group by ProID order by count(CityID) desc limit 5;
+
+-- 查询中国各省有多少地级市, 降序取地级市超过10的省份
+select ProID,count(CityID) as Cities from t_city group by ProID having Cities > 10 order by Cities desc;
+
+-- 查询中国区县最多的十个城市,输出城市名字
+select CityName from t_city where CityID in (
+    select temp.CityID from(
+        select CityID,count(CityID)as Districts from t_district group by CityID order by Districts desc limit 10
+    ) as temp
+);
+

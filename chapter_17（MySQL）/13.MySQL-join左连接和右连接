@@ -1,0 +1,11 @@
+-- 内连接 inner join（交集）
+select ProName,CityName from (t_province join t_city on t_province.ProID=t_city.ProID);
+
+insert into t_province(ProName) values ('日本省');
+insert into t_city(CityName) values ('洛杉矶市');
+
+-- 左连接 left join（左右表公共部分 + 左表独有部分）
+select ProName,CityName from (t_province left join t_city on t_province.ProID=t_city.ProID);
+
+-- 右连接 right join （左右表公共部分 + 右表独有部分）
+select ProName,CityName from (t_province right join t_city on t_province.ProID=t_city.ProID);

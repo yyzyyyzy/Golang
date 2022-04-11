@@ -1,0 +1,15 @@
+-- 字段约束 not null default
+create table person(
+    id int primary key auto_increment,
+    name varchar(20) not null unique ,
+    age int not null,
+    sex tinyint not null,
+    signature text,
+    birthday date default '0000-00-00',
+    wedding datetime default '0000-00-00'
+);
+
+
+insert person (name, age, sex, signature, birthday, wedding) values ('李子康', 18, 0, '我要进大厂', '1997-7-20', '2023-7-20');
+INSERT INTO mytest.person (id, name, age, sex, signature, birthday, wedding) VALUES (2, '戴超', 19, 1, '我要进绿盟', '1997-05-29', '2022-02-20 16:34:30');
+INSERT INTO mytest.person (name, age, sex, signature, birthday, wedding) VALUES ('王浩川', 20, 1, '我要进小米', '1997-04-22', '2024-07-22 16:34:30');

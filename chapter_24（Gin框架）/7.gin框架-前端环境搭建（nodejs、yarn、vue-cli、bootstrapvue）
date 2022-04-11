@@ -1,0 +1,45 @@
+1.node.js
+    node -v
+    npm -v
+
+2.yarn
+    yarn -v
+
+3.vue-cli
+yarn global add @vue/cli
+
+vue create gin-vue
+    配置vue项目
+
+打开webstorm
+    cd gin-cli
+    yarn serve
+
+4.bootstrap-vue
+    yarn add vue bootstrap bootstrap-vue
+
+5.打开main.js
+    复制代码
+    import Vue from 'vue'
+    import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+    import 'bootstrap/dist/css/bootstrap.css'
+    import 'bootstrap-vue/dist/bootstrap-vue.css'
+    Vue.use(BootstrapVue)
+    Vue.use(IconsPlugin)
+
+6.在assets文件下新建scss的文件夹，创建index.scss文件
+    复制代码
+    @import '~bootstrap';
+    @import '~bootstrap-vue';
+
+7.在main.js引入index.scss文件
+    import './assets/scss/index.scss';
+
+8.测试
+    复制代码到home.vue
+    <div>
+      <b-button>Button</b-button>
+      <b-button variant="danger">Button</b-button>
+      <b-button variant="success">Button</b-button>
+      <b-button variant="outline-primary">Button</b-button>
+    </div>

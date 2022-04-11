@@ -1,0 +1,12 @@
+1.合并数据（通过合并SQL语句，同时也能减少SQL语句解析的次数，减少网络传输的IO）
+    insert T_District(DisName,CityID) values('东城区','1');
+    insert T_District(DisName,CityID) values('西城区','2');
+
+==>
+    insert T_District(DisName,CityID) values('东城区','1') ('西城区','2')
+
+2.在事务中进行插入处理（合并后日志量(MySQL的binlog和innodb的事务让日志)减少了，降低日志刷盘的数据量和频率，从而提高效率）
+    START TRANSACTION;
+    insert T_District(DisName,CityID) values('东城区','1') ('西城区','1')
+
+3.数据有序插入

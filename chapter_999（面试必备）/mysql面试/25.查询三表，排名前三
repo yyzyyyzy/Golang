@@ -1,0 +1,6 @@
+select person.name, partment.name, score.score
+from person, partment, score
+where person.id= score.person_id and partment.id = score.partment_id
+order by score.score
+desc
+limit 3;

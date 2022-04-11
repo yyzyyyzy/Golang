@@ -1,0 +1,36 @@
+-- 插入学生的选课信息
+-- 野间忠一郎选修了Python
+insert into student_course(stdid, clsid) values (
+                                                    (SELECT id from student where student.name='野间忠一郎'),
+                                                    (select id from course where course.name='Python')
+                                                );
+
+-- 野间忠一郎选修了Java
+insert into student_course(stdid, clsid) values (
+                                                    (SELECT id from student where student.name='野间忠一郎'),
+                                                    (select id from course where course.name='Java')
+                                                );
+
+-- 野间忠一郎选修了HTML5
+insert into student_course(stdid, clsid) values (
+                                                    (SELECT id from student where student.name='野间忠一郎'),
+                                                    (select id from course where course.name='HTML5')
+                                                );
+
+-- 香香八婆选修了Python
+insert into student_course(stdid, clsid) values (
+                                                    (SELECT id from student where student.name='香香八婆'),
+                                                    (select id from course where course.name='Python')
+                                                );
+
+-- 香香八婆选修了HTML5
+insert into student_course(stdid, clsid) values (
+                                                    (SELECT id from student where student.name='香香八婆'),
+                                                    (select id from course where course.name='HTML5')
+                                                );
+
+-- 二郎神选修了Python
+insert into student_course(stdid, clsid) values (
+                                                    (SELECT id from student where student.name='二郎神'),
+                                                    (select id from course where course.name='Python')
+                                                );

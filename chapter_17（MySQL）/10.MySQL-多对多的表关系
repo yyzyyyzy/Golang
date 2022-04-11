@@ -1,0 +1,25 @@
+-- 给学生分配课程，给课程分配学生（多条数据对应多条数据）
+-- 此时形成了多对多的表关系
+
+-- 多对多关系的维护，要通过建立中间表来维护，一个学生每加选一门课程，就将学生的id和课程的id同时存入一条记录中进行记录，
+-- 中间表的主键是【学生id和课程id的联合主键】，即同一个学生不能对同一门课程选修两次；
+
+create table student_course(
+    stdid integer not null ,
+    clsid integer not null ,
+    primary key (stdid,clsid)
+);
+
+-- 根据学生查询所有选课
+select * from course where id=(
+    select clsid from student_course where stdid=(
+        select id from student where student.name='二郎神'
+        )
+    );
+
+-- 根据选课查询所有学生
+select * from student where id=(
+    select stdid from student_course where clsid=(
+        select id from course where name='Java'
+        )
+    );

@@ -1,0 +1,32 @@
+Go 指针声明后赋值，出现 panic: runtime error: invalid memory address or nil pointer dereference
+这种是内存地址错误。
+
+首先我们要了解指针，指针地址
+在 Go 中 * 代表取指针地址中存的值，& 代表取一个值的地址
+对于指针，我们一定要明白指针储存的是一个值的地址，但本身这个指针也需要地址来储存
+
+①错误示例：
+package main
+
+import "fmt"
+
+func main() {
+	var i *int
+	fmt.Println(&i, i)
+	*i = 1
+	fmt.Println(&i, i, *i)
+}
+
+②正确写法：
+package main
+
+import "fmt"
+
+func main() {
+	var i *int
+
+	fmt.Println(&i, i) // 0xc000094010 <nil>
+
+	i = new(int)
+	fmt.Println(&i, i, *i) //0xc000094010 0xc0000a2010 0
+}

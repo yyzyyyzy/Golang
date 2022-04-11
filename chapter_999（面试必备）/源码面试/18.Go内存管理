@@ -1,0 +1,51 @@
+TCMalloc
+1.核心思想:
+    把内存分为多级管理，从而降低锁的粒度，它将可用的堆内存采用二级分配的方式进行管理，每个线程都会自行维护一个独立的线程内存池，
+    进行内存分配时优先从该线程内存池中分配,当线程内存池不足时才会向全局内存池申请，以避免不同线程对全局内存池的频繁竞争 ,进一步的降低了内存并发访问的粒度
+
+TCMalloc中几个重要概念:
+    Page: 操作系统对内存的管理同样是以页为单位，但TCMalloc中的Page和操作系统的中页是倍数关系，x64下Page大小为8KB
+    Span： 一组连续的Page被叫做Span，是TCMalloc内存管理的基本单位，有不同大小的Span，比如2个Page大的Span，16个Page大的Span
+    ThreadCache： 每个线程各自的Cache，每个ThreadCache包含多个不同规格的Span链表，叫做SpanList，
+                  内存分配的时候，可以根据要分配的内存大小，快速选择不同大小的SpanList，在SpanList上选择合适的Span，
+                   每个线程都有自己的ThreadCache，所以ThreadCache是无锁访问的
+    CentralCache： 中心Cache，所有线程共享的Cache，也是保存的SpanList，数量和ThreadCache中数量相同
+                    当ThreadCache中内存不足时，可以从CentralCache中获取
+                    当ThreadCache中内存太多时，可以放回CentralCache
+                    由于CentralCache是线程共享的，所以它的访问需要加锁
+    PageHeap： 堆内存的抽象，同样当CentealCache中内存太多或太少时，都可从PageHeap中放回或获取，同样，PageHeap的访问也是需要加锁的
+
+
+
+
+
+Go的内存分配和TCMalloc非常类似,仅有少量地方不同
+    Page: 操作系统对内存的管理同样是以页为单位，但TCMalloc中的Page和操作系统的中页是倍数关系，x64下Page大小为8KB
+    Span: 一组连续的Page被叫做Span，是TCMalloc内存管理的基本单位，有不同大小的Span，比如2个Page大的Span，16个Page大的Span
+    mcache: 和TCMalloc中不同之处在于，TCMalloc中是每个线程持有，而Go中是每个P(processor,逻辑处理器，go的并发调度器GPM模型中概念)持有，
+            在go程序中，当前最多有GOMAXPROCS个线程在用户态运行，所以最多需要GOMAXPROCS个mcache就可以保证各线程对mcache无锁访问，
+            而go中线程的运行又是与P绑定的，把mcache交给P刚好
+    mcentral: 和TCMalloc中CentralCache大致相同，不同之处在于CentralCache是每个size的Span有一个链表，mcache是每个size的span有两个链表，
+              这和mcache的内存申请有关，后面再做解释
+    mheap: 与TCMalloc中PageHeap大致相同，不同之处在于，mheap把span组织成了树结构，而不是链表，并且还是两棵树，利用空间换时间，同样也是为了内存的分配效率更快
+
+go的内存分类不像TCMalloc那样分成大中小对象，其只分为小对象和大对象，但其小对象又细分了一个Tiny对象
+    小对象: (mcache -> mcenttral -> mheap 不够就向右逐级申请)
+    Tiny对象: 指大小在1byte到16byte之间并且不包含指针的对象
+    其他小对象: 大小在16byte到32KB之间的对象
+    大对象: 大于32KB的对象，在mheap中分配
+
+Go在程序启动时，会向操作系统申请一大块内存，之后自行管理。
+Go内存管理的基本单元是mspan，它由若干个页组成，每种mspan可以分配特定大小的object。
+mcache, mcentral, mheap是Go内存管理的三大组件，层层递进。
+mcache管理线程在本地缓存的mspan；mcentral管理全局的mspan供所有线程使用；mheap管理Go的所有动态分配内存。
+极小对象会分配在一个object中，以节省资源，使用tiny分配器分配内存；一般小对象通过mspan分配内存；大对象则直接由mheap分配内存。
+
+Go的内存分配器在分配对象时，根据对象的大小，分成三类：小对象（小于等于16B）、一般对象（大于16B，小于等于32KB）、大对象（大于32KB）。
+大体上的分配流程：
+    >32KB 的对象，直接从mheap上分配；
+    <=16B 的对象使用mcache的tiny分配器分配；
+    (16B,32KB] 的对象，首先计算对象的规格大小，然后使用mcache中相应规格大小的mspan分配；
+    如果mcache没有相应规格大小的mspan，则向mcentral申请
+    如果mcentral没有相应规格大小的mspan，则向mheap申请
+    如果mheap中也没有合适大小的mspan，则向操作系统申请

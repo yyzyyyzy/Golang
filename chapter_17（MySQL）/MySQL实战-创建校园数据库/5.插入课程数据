@@ -1,0 +1,4 @@
+insert into course(name) values ('Python');
+insert into course(name) values ('Java');
+insert into course(name) values ('HTML5');
+insert into course(name) values ('PHP');

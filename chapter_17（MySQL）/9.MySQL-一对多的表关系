@@ -1,0 +1,8 @@
+-- 给班级分配学生（一条数据对应多条数据）
+-- 此时形成了一对多的表关系
+
+-- 查询班级“小刀会”的所有学生
+select * from student where classid=(select id from clazz where clazz.name='小刀会');
+
+-- 根据学生’十三姨‘查询班级
+select * from clazz where id=(select classid from student where student.name='十三姨')

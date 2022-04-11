@@ -1,0 +1,91 @@
+①接口类型分为2个：源码剖析：（src/runtime/runtime2.go）
+                1.空接口（没有方法列表），例如：
+                var e interface{}
+
+                2.非空接口（有方法列表），例如：
+                type student interface {
+                    GetName() string
+                    GetAge()  int
+                }
+
+3.空接口通过eface结构体实现：
+    type eface struct {
+        _type *_type         //记录数据是什么类型，_type指向接口的动态类型元数据（接口的动态类型）
+        data  unsafe.Pointer //记录数据在哪（指针），data指向接口的动态值（接口的动态值）
+    }
+
+4.非空接口通过iface结构体实现：
+    type iface struct {
+        tab  *itab //指向itab结构体，记录接口的方法列表和接口动态类型信息
+        data unsafe.Pointer //记录数据在哪（指针），data指向接口的动态值
+    }
+
+    type itab struct {
+    	inter *interfacetype//指向interface的类型元数据（接口类型），接口自身定义的类型信息，用于定位到具体interface类型
+    	_type *_type        //指向接口的动态类型元数据（接口的动态类型），接口实际指向值的类型信息-实际对象类型，用于定义具体interface类型
+    	hash  uint32        //记录从动态类型元数据拷贝的hash值，用于判断类型是否相等
+    	_     [4]byte
+    	fun   [1]uintptr    //记录接口的方法地址（接口方法实现列表，即函数地址列表，按字典序排序）
+    }
+
+    type interfacetype struct {
+    	typ     _type
+    	pkgpath name
+    	mhdr    []imethod   //接口方法声明列表，按字典序排序
+    }
+
+在空接口被赋值之前，_type = nil, data = nil
+
+②如果对空接口赋值：
+    var e interface{} //e{_type = nil, data = nil}
+
+    f,_ := os.Open("eggo.txt")
+    e = f
+
+1.*os.file对应的类型元数据：1._type类型描述信息 2.uncommomtype结构体
+2.把f指针赋值给e，接口e的_type指向*os.file的类型元数据（1._type类型描述信息 2.uncommomtype结构体），data = f
+3.并可以通过uncommontype结构体内的moff通过记录下的偏移量找到方法元数据数组
+
+③如果对非空接口赋值：
+    var rw io.ReadWriter
+    f,_ := os.Open("eggo.txt")
+    rw = f
+
+1.把f指针赋值给rw，接口rw的tab指向itab结构体（接口类型为io.ReadWriter，动态类型为*os.file），data = rw
+2.itab的fun记录接口的方法地址从动态类型元数据中拷贝接口要求的方法地址，无需再从*os.file的类型元数据中查找方法
+3.当itab的接口类型确定，则指向接口的动态类型元数据也可以确定，那么itab不会改变，可以多次复用
+4.go语言会把itab结构体缓存，以<接口类型，动态类型>为key，itab结构体指针为value，构造哈希表，用于存储和查询itab的缓存信息
+5.这里的哈希表和map哈希表不同，更为简单，key的哈希值通过接口类型的哈希值和动态类型的哈希值进行异或运算，对应上itab的指针哈希值就直接使用这个itab
+  如果没有找到itab缓存，那么就创建一个itab结构体添加到itab哈希表
+
+
+------------------------------------------------------------------------------------------------------------------------
+1.接口类型分为空接口和非空接口
+2.空接口通过eface结构体实现：
+  type eface struct {
+      _type *_type         //记录数据是什么类型，_type指向接口的动态类型元数据（接口的动态类型）
+      data  unsafe.Pointer //记录数据在哪（指针），data指向接口的动态值（接口的动态值）
+  }
+3.非空接口通过iface结构体实现：
+    type iface struct {
+        tab  *itab          //指向itab结构体，记录接口的方法列表和接口动态类型信息
+        data unsafe.Pointer //记录数据在哪（指针），data指向接口的动态值
+    }
+
+    type itab struct {
+    	inter *interfacetype//指向interface的类型元数据（接口类型），接口自身定义的类型信息，用于定位到具体interface类型
+    	_type *_type        //指向接口的动态类型元数据（接口的动态类型），接口实际指向值的类型信息-实际对象类型，用于定义具体interface类型
+    	hash  uint32        //记录从动态类型元数据拷贝的hash值，用于判断类型是否相等
+    	_     [4]byte
+    	fun   [1]uintptr    //记录接口的方法地址（接口方法实现列表，即函数地址列表，按字典序排序）
+    }
+
+    type interfacetype struct {
+    	typ     _type
+    	pkgpath name
+    	mhdr    []imethod   //接口方法声明列表，按字典序排序
+    }
+4.当itab的接口类型确定，则指向接口的动态类型元数据也可以确定，那么itab不会改变，可以多次复用
+5.go语言会把itab结构体缓存，以<接口类型，动态类型>为key，itab结构体指针为value，构造哈希表，用于存储和查询itab的缓存信息；
+  把接口类型的哈希值和动态类型的哈希值进行异或运算，对应上itab的指针哈希值就直接使用这个itab
+  如果没有找到itab缓存，那么就创建一个itab结构体添加到itab哈希表

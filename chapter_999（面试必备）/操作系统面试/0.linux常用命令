@@ -1,0 +1,63 @@
+CPU性能：
+    top：load average:负载（平均1分钟、5分钟、15分钟的CPU负载情况）负载：平均时间内CPU处理任务的数量
+         与你的CPU核心数量比较：大于CPU核心比较繁忙，小于CPU核心属于正常
+         -p 显示指定的进程信息
+    htop
+    uptime
+    vmstat
+
+内存命令：
+    free
+
+磁盘命令：
+    df：disk free，df通常针对的是文件系统
+    du：disk usage，du通常针对的是目录
+    df 和 du显示空间不一致：文件删除的问题。当一个文件被删除后,在文件系统目录中已经不可见了,所以du就不会再统计它了。”
+    iotop
+
+
+网络
+    iftop：查看网络吞吐量
+
+进程
+    ps
+    pstree
+
+端口占用
+    netstat -ntlp|grep 3306
+
+文件拷贝
+    scp：全量备份、文件级传输、加密传输、资源消耗极低
+    rsync：差异对比、增量备份、部分传输、非加密传输、资源消耗高
+
+
+linux三剑客：
+grep -c 计数
+grep -v 取反
+grep -n 显示过滤结果的行号
+grep -nir nginx :忽略大小写递归显示所有路径或文件中包含nginx的路径和行号
+egrep 'AAA|BBB' word.txt:正则精确匹配
+
+sed -r:支持正则扩展
+增删改查：
+c/a/i:对文本进行增加replace,append,insert
+d:对文本进行删除delete
+s:对文本进行替换substitute
+p:对文本进行显示print
+
+awk
+作用：
+1.过滤
+2.统计，数据分析
+主要用来过滤和统计日志
+
+
+显示文件前几行后几行：
+head -n
+tail -n
+
+查找大于10M的文件
+find ./ -type f -size +10000k
+
+修改IP
+进入目录：/etc/sysconfig/network-scripts，修改文件ifcfg-ens33文件

@@ -1,0 +1,2 @@
+1.可以不使用对象，用 _ 代替即可 func (_ *MyInt)
+2.方法可以是指针可以是类型 func (i *MyInt) // func (i MyInt)

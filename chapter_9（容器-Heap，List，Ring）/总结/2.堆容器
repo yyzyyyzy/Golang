@@ -1,0 +1,13 @@
+1.heap 是一个堆的实现。一个堆正常保证了获取/弹出最大（最小）元素的时间为log n、插入元素的时间为 log n.
+2.如果要使用官方提供的 heap，需要我们实现如下几个接口：
+    Len() int {}                    // 获取元素个数
+    Less(i, j int) bool  {}         // 比较方法
+    Swap(i, j int)                  // 元素交换方法
+    Push(x interface{}){}           // 在末尾追加元素
+    Pop() interface{}               // 在末尾删除元素,并返回最后一个元素
+3.然后在使用时，我们可以使用如下几种方法：
+    func Init(h Interface){}                            // 初始化一个堆
+    func Push(h Interface, x interface{}){}             // push一个元素倒堆中
+    func Pop(h Interface) interface{} {}                // pop 堆顶元素
+    func Remove(h Interface, i int) interface{} {}      // 删除堆中某个元素，时间复杂度 log n
+    func Fix(h Interface, i int){}                      // 调整i位置的元素位置（位置I的数据变更后）

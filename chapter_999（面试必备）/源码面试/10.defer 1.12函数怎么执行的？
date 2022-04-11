@@ -1,0 +1,186 @@
+①defer作用：
+        1.延迟对函数进行调用（）；
+        2.即时对函数的参数进行求值；
+        3.根据 defer 顺序反序调用；
+
+②defer源码详解：如：
+    func A() {
+        defer B()
+        ...
+    }
+
+    源码为：
+
+    func A() {
+        r = deferproc(8, B) //deferproc()注册defer函数
+
+        ....
+
+        runtime.deferreturn()   //执行注册的defer函数B
+        return
+    }
+
+作用一：（延迟对函数进行调用）
+        先由deferproc(siz int32, fn *funcval)注册需要延迟的函数，再由runtime.deferreturn调用注册的函数，从而实现延迟效果
+        deferproc(siz int32, fn *funcval)：参数和返回值共占用的字节，fn为funcval指针指向runtime.funcval结构体
+        注册时，添加defer链表项，执行时，移除defer链表项
+
+作用三：（根据 defer 顺序反序调用）
+        defer信息会注册到一个链表，当前执行的goroutine持有链表的头指针，每个goroutine运行时都对应一个结构体runtime.g
+        runtime.g结构体其中有一个*_defer字段指向defer的链表头，defer链表是由一个个的_defer结构体，
+        新注册的defer会添加到链表头，执行也是从头开始，所以defer是倒序调用
+
+③_defer结构体：
+            type _defer struct {
+                siz int32       //记录函数的参数和返回值占用多少字节
+                started bool    //标记defer是否已经执行
+                sp uintptr      //记录注册这个函数的栈指针（判断注册的函数是否执行完毕）
+                pc uintptr      //deferproc()的返回地址
+                fn *funcval     //注册的funcval结构体的地址
+                _panic *_panic
+                link *_defer    //连接前一个_defer的结构体
+            }
+
+例一：
+    func A1(a int) {
+        fmt.Println(a)
+    }
+    func A() {
+        a, b := 1, 2
+        defer A1(a) //
+
+        a = a + b
+        fmt.Println(a,b)
+    }
+0.func deferproc(siz int32, fn *funcval) siz记录函数的参数和返回值占用多少字节，fn记录注册的funcval
+1.栈上分配a = 1, b = 2局部变量空间，执行defer A1(a) --> deferproc(siz=8, fn=addr2)；
+2.函数A1没有使用外部函数定义的变量（没有捕获列表），设函数A1的函数指令入口地址为addr1
+3.A1没有返回值，整型参数64位占用8字节，没有捕获列表的funcval在数据段的只读数据段分配一个共用的funcval（fn=addr2），指向函数A1指令入口addr1
+4.deferproc函数注册时，编译器会在a = 1, b = 2栈帧参数空间后面开辟空间存放defer函数的返回值和参数，A1函数只有一个参数a=1
+5.deferproc函数执行时，编译器会在堆上分配存放_defer结构体和A1的参数a = 1：
+    type _defer struct {
+        siz = 8
+        started = false
+        sp of A
+        pc return addr
+        fn = addr2
+        _panic = nil
+        link = nil
+    }
+    a = 1
+
+6.将这个_defer结构体添加到defer链表头，deferproc函数注册结束
+7.执行 a = a + b ，输出局部变量a = 3, b = 2
+8.执行 runtime.deferreturn()，执行defer链表，从当前的goroutine取到链表头的_defer结构体，通过fn找到funcval拿到函数的入口地址
+9.调用A1时会把_defer结构体后面的参数和返回值（a = 1）拷贝到A1的调用栈帧
+10.执行A1，输出参数值1（a=1注册时拷贝到堆上，执行时拷贝到栈上）
+
+ps：go语言会预先分配不同规格的defer池，执行时选择合适规格且空闲的_defer中取出来用，没有空闲的或者合适规格的再进行堆分配，用完以后放回空闲的_defer池，
+    避免频繁的堆分配和gc回收
+
+例二：
+    funcA() {
+        a, b := 1, 2
+        defer func(b int) {
+            a = a + b //捕获了外层函数的局部变量a，形成闭包
+            fmt.Println(a,b)
+        }(b)
+        a = a + b
+        fmt.Println(a,b)
+    }
+
+1.由于defer的是闭包，闭包在代码段生成函数指令A_func1入口地址，执行阶段使用代码段上的A_func1的入口地址创建闭包对象
+2.由于捕获变量a除了初始化赋值还被修改过，所以局部变量a改为堆分配（没有捕获变量的话就是在数据段上静态分配）
+3.栈上存储a的地址&a，还有局部变量 b=2，在堆上创建funcval结构体（闭包对象）{捕获列表=&a，fn=addr1（funcval结构体）}
+4.deferproc函数执行时，defer结构体的fn保存的就是闭包对象的funcval的地址fn=addr1，同时拷贝参数b = 2到堆上
+5.将这个defer结构体添加到defer链表头，deferproc结束
+6.执行外层函数的a = a + b，输出堆上的a = 3, b = 2
+7.执行 runtime.deferreturn()，执行注册的defer函数，把参数b拷贝到栈帧空间，再通过寄存器存储的funcval和偏移量找到捕获变量a的地址
+8.执行闭包内的a = a + b   ，输出局部变量a = 5, b = 2
+
+例三：
+    func B(a int) int {
+        a++
+        return a
+    }
+
+    func A(a int) {
+        a++
+        fmt.Println(a) //3
+    }
+
+    func main() {
+        a := 1
+        defer A(B(a))
+        a++
+        fmt.Println(a) //2
+    }
+1.输出：2、3
+
+
+例四：
+    func A() {
+        ...
+        defer A1()
+        ...
+        defer A2()
+        ...
+    }
+
+    func A2() {
+        ...
+        defer B1()
+        defer B2()
+        ...
+    }
+
+    func A1() {
+        ...
+    }
+1.函数先注册两个defer，在当前goroutine下用链表记录A2、A1
+2.在deferreturn执行前判断defer链表头上的defer是不是A注册的（判断defer结构体内的sp是否等于A的栈指针（A2.sp == sp of A））
+3.保存函数的相关信息后，从defer链表中移除A2，执行函数A2，再此注册两个defer链表B2、B1
+4.在deferreturn执行前判断defer链表头上的defer是不是A2注册的（判断defer结构体内的sp是否等于A2的栈指针（B2/B1.sp == sp of A2））
+5.保存函数的相关信息后，从defer链表中移除B2、B1，，A2结束
+6.执行A1，A1结束，defer链表为空，函数A执行完毕
+------------------------------------------------------------------------------------------------------------------------
+1.defer的作用：
+            1.延迟对函数进行调用（）；
+                先由deferproc(siz int32, fn *funcval)注册需要延迟的函数，再由runtime.deferreturn调用注册的函数，从而实现延迟效果
+                deferproc(siz int32, fn *funcval)：参数和返回值共占用的字节，fn为funcval指针指向runtime.funcval结构体
+                注册时，添加defer链表项，执行时，移除defer链表项
+
+            2.即时对函数的参数进行求值；
+
+            3.根据 defer 顺序反序调用（结构类似于栈：后进先出）；
+                defer信息会注册到一个链表，当前执行的goroutine持有链表的头指针，每个goroutine运行时都对应一个结构体runtime.g
+                runtime.g结构体其中有一个*_defer字段指向defer的链表头，defer链表是由一个个的_defer结构体，
+                新注册的defer会添加到链表头，执行也是从头开始，所以defer是倒序调用
+
+ps：go语言会预先分配不同规格的defer池，执行时选择合适规格且空闲的_defer中取出来用，没有空闲的或者合适规格的再进行堆分配，用完以后放回空闲的_defer池，
+    避免频繁的堆分配和gc回收
+
+2.defer1.12版本问题：
+    defer太慢：1.defer结构体堆分配，即使有预分配的defer池，也要在堆上获取和释放，参数需要在堆栈上多次拷贝
+              2.使用链表注册defer信息，链表本身较慢
+
+3.defer1.13版本优化和问题
+    优化：1.defer结构体增加了heap字段，将defer结构体信息保存到局部变量的栈帧空间，减少堆分配
+         2.通过deferprocStack把栈上的defer结构体注册到defer链表中
+         3.不用在堆栈间拷贝参数，将栈上的局部变量空间，拷贝到栈上的参数空间
+    问题：1.显示循环/隐式循环下的defer仍然需要1.12版本的处理方式：堆上分配defer结构体
+
+4.defer1.14版本的优化和问题
+    优化：1.函数返回前直接调用需要defer的函数，省去了构造defer链表、注册链表的过程，同样实现了defer函数的延迟执行
+         2.对于到执行阶段才能确定是否需要调用的函数，新增了标识变量df，对应defer函数是否需要被执行，调用时就判断defer标识位是否为1，1就执行，同时将df置为0
+         3.将defer函数的执行逻辑展开，从而免于创建defer结构体
+    问题：1.显示循环/隐式循环下的defer仍然需要1.12版本的处理方式：堆上分配defer结构体
+         2.如果发生panic或者使用runtime.Goexit()函数，defer函数调用无法执行，就必须去执行defer链表，而1.14版本的defer没有注册，必须通过栈扫描，
+           再次新增字段，用来找到未注册到链表的defer函数，defer变快了，但是panic会更加慢了
+
+5.return 和 defer的执行顺序？
+    return赋值和返回是两个步骤，不是原子操作，如果有defer会插在两个步骤中:
+        1.返回值赋值
+        2.<defer语句> //可有可无
+        3.返回值返回
+

@@ -1,0 +1,7 @@
+use blog;
+create table category (
+    id bigint(20) primary key auto_increment,
+    name varchar(64) not null unique,
+    create_time timestamp not null default current_timestamp comment '创建时间',
+    update_time timestamp not null default current_timestamp on update current_timestamp comment '更新时间'
+);

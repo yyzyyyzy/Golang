@@ -1,0 +1,10 @@
+①切片地址：
+1.切片名就是一个切片的地址
+2.append追加数据，切片地址可能会发生改变
+
+②slice扩容机制:
+1.源码包src\runtime\slice.go ==> 函数growslice()负责扩容， roundupsize()负责内存对齐
+2.newcap是扩容后的容量，先根据原切片的长度、容量和要添加的元素个数确定newcap大小，最后再对newcap做内存对齐得到最后的newcap。
+  进行内存对齐之后，新 slice 的容量是要 大于等于老 slice 容量的2倍或者1.25倍。
+3.之后，向 Go 内存管理器申请内存，将老 slice 中的数据复制过去，并且将 append 的元素添加到新的底层数组中。
+4.最后，向 growslice 函数调用者返回一个新的 slice，这个 slice 的长度并没有变化，而容量却增大了。

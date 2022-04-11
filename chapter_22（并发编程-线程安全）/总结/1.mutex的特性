@@ -1,0 +1,1 @@
+1.一个mutex只能被一个goroutine锁定，其他goroutine一直阻塞到mutex解锁

@@ -1,0 +1,2 @@
+select 学生表.学号.姓名.成绩 from student where 分数= ( SELECT max(分数) FROM [student] )
+select 学生表.学号.姓名.成绩 from 学生表 join 成绩表 on 学生表.学号 = 成绩表.学号 order by 学号 compute max(成绩),min(成绩) by 学号

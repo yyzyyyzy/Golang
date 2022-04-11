@@ -1,0 +1,91 @@
+类型断言的关键点在于：明确接口的动态类型和对应类型的方法列表是否一致
+①空接口.(具体类型)：
+                 var e interface{}
+                 r, ok := e.(*os.File)
+
+1.e这个空接口是由eface结构体里的_type指向*os.file的类型元数据
+2.如果赋值为：
+            var e interface{}
+            f, _ := os.Open("eggo.txt")
+            e = f
+            r, ok := e.(*os.File)
+
+            //那么e的动态类型元数据就是*os.File, 动态值data = f,断言成功
+            //r为f，ok为true
+
+3.如果赋值为：
+            var e interface{}
+            f := "eggo.txt"
+            e = f
+            r, ok := e.(*os.File)
+
+            //那么e的动态类型元数据就是string类型, 动态值data = f,断言失败
+            //r为nil，ok为False
+
+
+②非空接口.(具体类型)：(io.ReadWriter是系统内置的结构体，包含了Read和Write接口)
+                    var rw io.ReadWriter
+                    r, ok := rw.(*os.File)
+
+1.rw这个非空接口是由iface结构体里的itab结构体里的<接口类型（*interfacetype）,动态类型（*_type）>组合的key通过异或运算查找到对应的itab指针
+2.所以只要看tab是否指向io.ReadWriter结构体就能够判断断言是否成功
+3.如果赋值为：
+            var rw io.ReadWriter
+            f, _ := os.Open("eggo.txt")
+            rw = f
+            r, ok := rw.(*os.File)
+
+            //那么rw的动态类型是*os.File，tab指向io.ReadWriter；动态值就是data = f，断言成功
+            //r为f，ok为true
+
+4.如果赋值为：
+            var rw io.ReadWriter
+            f := eggo{name: "eggo"}
+            rw = f
+            r, ok := rw.(*os.File)
+
+            //此时rw动态类型是main.eggo，tab指向<io.ReadWriter, eggo>结构体；动态值data = &f，断言失败
+            //r为*os.File的类型零值nil，ok为flase
+
+③空接口.(非空接口)：
+                 var e interface{}
+                 rw, ok := e.(io.ReadWriter)
+
+1.如果赋值为：
+            var e interface{}
+            f, _ := os.Open("eggo.txt")
+            e = f
+            rw, ok := e.(io.ReadWriter)
+
+            //rw的动态类型是*os.File，动态值data = f
+            //在itab缓存哈希表里找<io.ReadWriter, *os.File>对应的itab结构体；
+            //同时进一步判断是否itab.fun[0] == 0（断言失败的itab也会缓存且itab.fun[0] == 0）
+            //再去检查*os.File的方法列表有无Read，Write方法
+            //rw就是一个io.ReadWriter类型的变量，ok为true，断言成功
+
+2.如果赋值为：
+            var e interface{}
+            f := "eggo.txt"
+            e = f
+            rw, ok := e.(io.ReadWriter)
+
+            //rw的动态类型是string，动态值data = &f；在itab缓存哈希表里找<io.ReadWriter, *os.File>对应的itab结构体
+            //断言失败的itab会缓存在哈希表中，且itab.fun[0] == 0
+            //rw为io.ReadWriter的类型零值，ok为false
+
+④非空接口.(非空接口)：（用来判断w存储的动态类型是否实现了io.ReadWriter接口）
+                 var w io.Writer
+                 rw, ok := w.(io.ReadWriter)
+
+1.如果赋值为：
+            var w io.Writer
+            f, _ := os.Open("eggo.txt")
+            e = f
+            rw, ok := w.(io.ReadWriter)
+
+            //w是io.Writer类型，要求实现Write方法，io.ReadWriter要求实现Read和Write方法
+            //rw的tab指针指向<io.Writer,*os.File>为key的itab结构体，动态值data = f
+
+------------------------------------------------------------------------------------------------------------------------
+类型断言需要分四种情况：空接口、非空接口、具体类型、非空接口类型 组合起来
+断言的关键是明确接口的动态类型和对应类型的方法列表是否一致

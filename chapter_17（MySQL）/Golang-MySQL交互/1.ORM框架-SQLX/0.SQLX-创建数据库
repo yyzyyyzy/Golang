@@ -1,0 +1,16 @@
+create database sqlx_database;
+
+use sqlx_database;
+
+create table person(
+    ID int primary key auto_increment,
+    Name varchar(20),
+    Age int,
+    Gender varchar(2),
+    Email varchar(20),
+    Phone varchar(11) unique
+);
+
+insert into person (name, age, gender, email, phone) values ('王浩川',19,'男','857644244@qq.com','13951972662');
+insert into person (name, age, gender, email, phone) values ('赵杰',20,'女','zhaojie@163.com','13804056806');
+insert into person (name, age, gender, email, phone) values ('戴超',21,'男','daichao@yahoo.com','13805068702');

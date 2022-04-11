@@ -1,0 +1,17 @@
+func main() {
+    x := []string{"a", "b", "c"}
+    for v := range x {
+        fmt.Println(v) 		//此处为x的索引值index  0, 1, 2
+    }
+    for _, v := range x {
+        fmt.Println(v) 		//此处为x的值value  a, b, c
+    }
+}
+1.range基础语法 
+    for _, v := range x{
+        xxxxxxxxx
+    }
+
+2.range原理：
+    range 是使用一个副本重复赋值的方式来遍历每一个目标元素的，可以将其视为一个目标元素类型的变量，
+    每一次遍历迭代就会把目标元素拷贝到range准备的副本，并作返回。

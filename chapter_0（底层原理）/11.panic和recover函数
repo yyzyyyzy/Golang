@@ -1,0 +1,163 @@
+①_panic结构体:
+            type _panic struct{
+               argp        unsafe.Pointer //defer的参数空间地址
+               arg         interface{}    //panic的参数
+               link        *_panic        //链接下一个panic结构体
+               recovered   bool           //是否被恢复
+               aborted     bool           //是否被终止
+           }
+
+在goroutine中，不仅有defer链表的头指针*_defer，也有panic链表的头指针*_panic，连接了一个个_panic结构体，
+当发生新的panic，在链表头插入新的_panic结构体，也就是当前正在执行的panic。
+
+
+
+例一：（panic流程）
+    func A() {
+        defer A1()
+        defer A2()
+        ...
+        panic("panicA")
+        ...
+    }
+
+    func A1() {
+        ...
+        panic("panic A1")
+        ...
+    }
+
+1.defer先进后出，golang通过deferproc函数链表注册A2，A1两个结构体
+2.发生panic时，会调用runtime.gopanic函数，负责添加panic链表项，panicA触发defer执行，在panic链表中增加一个panicA结构体，
+  然后继续执行defer链表，由于defer结构体为：
+     type _defer struct {
+        siz int32       //记录函数的参数和返回值占用多少字节
+        started bool    //标记defer是否已经执行
+        sp uintptr      //记录注册这个函数的栈指针（判断注册的函数是否执行完毕）
+        pc uintptr      //deferproc()的返回地址
+        fn *funcval     //注册的funcval
+        _panic *_panic  //指向当前执行的panic（表示这个defer是由这个panic触发的）
+        link *_defer    //连接前一个_defer的结构体
+    }
+3.首先将started字段置为true，标记panicA已经开始执行defer；_panic字段指向当前执行的panicA，defer是由此panicA触发
+4.defer的执行阶段是倒序执行，先执行defer A2()，A2的_defer结构体{A2.started=true; A2._panic=&panicA}，
+  A2没有panic，A2的defer结构体会被移除，执行下一个defer
+5.接着执行下个defer A1()，A1的_defer结构体{A1.started=true; A1._panic=&panicA}，
+  而A1发生了panic，则在panic链表中增加一个panicA1结构体，当前执行的panic为panicA1
+6.执行defer链表，发现A1已经执行，触发deferA1结构体的是panicA，则将panicA标记已终止，deferA1也被移除，defer链表为空
+7.panic打印会从链表尾开始，按照panic顺序依次打印 panicA和panicA1的信息
+
+
+ps：
+1.panic执行defer函数：先标记，后释放，目的是终止之前发生的panic
+2.异常信息的输出方式：输出顺序与发生顺序相同
+
+②有recover的情况（recovered=true）
+
+例二：（发生recover的函数正常返回）
+    func A() {
+        defer A1()
+        defer A2()
+        ...
+        panic("panicA")
+        ...
+    }
+
+    func A2() {
+        ...
+        p := recover()
+        fmt.Println(p)
+        ...
+    }
+
+1.defer先进后出，链表注册A2，A1两个结构体；panicA触发defer链表执行，panic链表添加一个panicA结构体
+2.执行前先标记defer_A2结构体{A2.started=true; A2._panic=&panicA}
+3.然后执行defer A2()，发生recover，将当前panicA结构体置为recovered=true； 然后输出p=panicA，deferA2结束，
+4.panic会检查panic是否被恢复，恢复则将panicA从链表中移除，defer_A2结构体也会被移除，移除前只留下sp和pc两个字段
+5.通过sp可以恢复到函数A的栈帧，通过pc可以恢复到deferproc()的返回地址，执行runtime.deferreturn()继续执行defer链表
+6.runtime.deferreturn()只负责执行，而deferA1是通过栈指针来判断的，所以函数defer A1()执行，执行完毕后，defer链表为空
+
+ps：
+1.recovered = true会让panic流程移除被恢复的panic并跳出panic流程；
+  但是只有当发生recover的函数正常返回后才会检测panic是否被恢复，进而删除被恢复的panic
+
+
+例三：（发生recover的函数再次发生panic：被恢复的panic什么情况下不会被移除）
+    func A() {
+        defer A1()
+        defer A2()
+        ...
+        panic("panicA")
+        ...
+    }
+
+    func A2() {
+        ...
+        p := recover()
+        fmt.Println(p)
+        panic("panicA2")
+        ...
+    }
+
+1.defer先进后出，链表注册A2，A1两个结构体；panicA触发defer链表执行，panic链表添加一个panicA结构体
+2.执行前先标记defer_A2结构体{A2.started=true; A2._panic=&panicA}
+3.然后执行defer A2()，发生recover，将当前panicA结构体置为recovered=true； 然后输出p=panicA
+4.panic链表增加一个panicA2成为当前panic，并去执行defer链表，会发现deferA2已经被panicA执行了，所以把panicA2终止，并把deferA2从defer链表移除
+5.继续执行deferA1，而deferA1是由deferA1触发的，defer结束后被移除，defer链表为空
+6.输出panic异常信息：panicA{recovered=true,aborted=true}，panicA2
+
+
+③panic——recover嵌套
+
+例四：
+    func A() {
+        defer A1()
+        defer A2()
+        panic("panicA")
+    }
+    func A1() {
+    fmt.Println("A1")
+    }
+    func A2() {
+        defer B1()
+        panic("panicA2")
+    }
+    func B1() {
+        p := recover()
+        fmt.Println(p)
+    }
+1.defer先进后出，链表注册A2，A1两个结构体，发生panic时，会调用runtime.gopanic函数，panic链表添加一个panicA结构体
+2.panicA触发defer链表执行，执行defer函数A2，在defer链表中添加一个deferB1结构体，再次发生panic，panic链表添加一个panicA2结构体
+3.panicA2触发defer链表执行，执行函数B1，发生recover，将panicA2结构体置为recovered=true，输出p=panicA2
+4.由于panicA2被恢复，那么将panicA2终止，从panic链表中移除，同时panicA2注册的deferB1也从defer链表中移除，移除前留下sp和pc两个字段
+5.通过pc可以恢复到deferproc()的返回地址，再通过sp找到栈指针，执行runtime.deferreturn()继续执行deferA2链表
+6.由于A2注册的defer函数执行完毕，那么deferreturn返回，函数A2返回，而函数A2是panicA触发调用的，函数A2结束后，继续执行panicA的处理，执行defer链表
+7.继续执行deferA1，打印“A1”，执行完毕后，defer链表和panic链表均为空。
+
+
+------------------------------------------------------------------------------------------------------------------------
+panic：
+    1.常见panic：
+        1.数组( slice )下标越界
+        2.访问未初始化的指针或 nil 指针
+        3.试图往已经 close 的chan里发送数据
+        4.重复关闭管道
+        5.并发读写相同map
+        6.类型断言
+
+    2.在goroutine中，不仅有defer链表的头指针*_defer，也有panic链表的头指针*_panic，连接了一个个_panic结构体，
+      当发生新的panic，在链表头插入新的_panic结构体，也就是当前正在执行的panic
+
+    3.panic执行前，会把defer结构体的started字段置为true，panic字段指向当前执行的panic，表示这个defer是由这个panic触发的，
+      之所以这样设计，是为了应对defer函数没有正常结束的情况
+
+    4.panic打印异常信息，是从链表尾开始逐个打印（顺序打印）
+
+
+recover：（移除并跳出当前panic的处理流程）
+    1.将panic结构体内的recovered字段置为true，一旦恢复，就从panic链表中删除此panic，同时在defer链表中移除触发此panic对应的defer结构体，
+      但是要保存defer结构体内的sp（执行函数的栈指针）和pc字段（调用deferproc()的返回地址），利用sp和pc跳出panic的处理流程
+    2.sp可以恢复到执行函数的栈帧，通过pc恢复到if r > 0 {...}的指令地址，将r置为1，程序就会执行到deferreturn，继续执行defer链表
+
+ps：panic不会被移除的情况：
+    1.发生recover的defer函数再返回之前再次发生panic

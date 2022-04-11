@@ -1,0 +1,9 @@
+数据读写分离：
+把数据的读请求（select）和写请求（insert,update,delete）分配给不同的服务器
+
+如何实现读写分离：
+在代理服务器上安装中间件软件：
+maxscale,mycat,mysql-proxy
+通过代理服务器进行数据分流（识别是读请求还是写请求）
+
+

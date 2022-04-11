@@ -1,0 +1,32 @@
+1.索引最左前缀原则：
+MySQL创建联合索引的规则是：排好序的B+tree结构
+首先会对联合索引的最左边第一个字段排序，
+在第一个字段的排序基础上，然后在对第二个字段进行排序。
+所以当我们创建一个联合索引的时候，如(key1,key2,key3)，
+相当于创建了（key1）、(key1,key2)和(key1,key2,key3)三个索引
+
+例如：id,name,age,gender，id为主键聚簇索引，name,age为联合索引
+select * from table where name="lzk" and age=18;    使用联合索引
+select * from table where name="lzk";               使用联合索引
+select * from table where age=18;                   不使用联合索引
+select * from table where age=18 and name="lzk";    使用联合索引（mysql会优化sql语句顺序）
+
+2.回表：
+例如：id,name,age,gender，id为主键聚簇索引
+select * from table where name="lzk";
+根据name的B+tree匹配到对应叶子节点的id值，再通过id的B+tree检索整行记录的过程叫回表
+回表效率低，避免回表操作
+
+3.索引覆盖：
+例如：id,name,age,gender，id为主键聚簇索引
+select id,name from table where name="lzk";
+将所有需要查询的列变为联合索引，此时使用的就是索引覆盖，不需要回表
+索引覆盖效率高
+
+4.索引下推：
+例如：
+select * from table where name="lzk" and age=18;
+不使用索引下推：
+先根据name从存储引擎中拉取数据到server层，再在server层过滤age
+使用索引下推：
+直接根据name和age做筛选，将筛选结果返回给server层

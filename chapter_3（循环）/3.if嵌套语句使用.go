@@ -1,0 +1,21 @@
+package main
+
+import "fmt"
+
+func main() {
+	score := 500
+	if score >= 200 {
+		fmt.Println("可以去清华")
+		if score <= 600 {
+			fmt.Println("家里蹲")
+			if score == 500 {
+				fmt.Println("建议重开")
+				if score != 400 {
+					fmt.Println("还好还好")
+				}
+			}
+		}
+	} else {
+		fmt.Println("输入格式有误")
+	}
+}

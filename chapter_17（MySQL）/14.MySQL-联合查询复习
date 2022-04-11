@@ -1,0 +1,71 @@
+-- 查询中国一共多少地级市
+select count(*) as Cities from t_city;
+
+-- 查询河北省一共多少地级市
+select count(*) as Cities from t_city where ProID=(
+    select ProID from t_province where ProName='河北省'
+    );
+
+-- 统计各省地级市的数量
+select ProID,count(*) from t_city group by ProID;
+
+-- 求每个省份中最大的城市ID
+select ProID,max(CityID) from t_city group by ProID;
+
+-- 地级市最多的省份取前10名
+select ProID,count(*) as CityCount from t_city group by ProID order by CityCount desc limit 10;
+
+-- 查询拥有区县最多的城市的前10名
+select CityID,count(*) as disCount from t_district group by CityID order by disCount desc limit 10;
+
+-- 查询拥有20个以上区县的城市
+select CityID,count(*) as disCount from t_district group by CityID having disCount >= 20;
+
+-- 打出拥有20个以上区县的城市名字（子查询）
+select CityName from t_city where CityID in (
+    select CityID from (
+       select CityID,count(*) as disCount from t_district group by CityID having disCount >= 20
+    )temp
+);
+
+-- 现有最宜居城市排行榜如下：("宁波市","银川市","宜春市","宜昌市","咸阳市","芜湖市","泰州市","秦皇岛市","南通市","南京市","昆明市","桂林市","丹东市","大连市","长沙市","包头市","遂宁市","绵阳市","河州市")
+-- 求哪个省拥有最多的宜居城市，各有几个？
+-- 你家乡所在的省份拥有哪些宜居城市
+select ProName,count(t_city.ProID) as Cities from (
+    t_province join t_city on t_province.ProID = t_city.ProID
+)group by t_city.ProID;
+
+-- 求各省各有多少宜居城市，降序排列
+select ProName,count(CityID) as goodCities from (
+  t_province join t_city on t_province.ProID = t_city.ProID
+)where CityName in ('宁波市','银川市','宜春市','宜昌市','咸阳市','芜湖市','泰州市','秦皇岛市','南通市','南京市','昆明市','桂林市','丹东市','大连市','长沙市','包头市','遂宁市','绵阳市','河州市')
+group by t_city.ProID order by goodCities desc ;
+
+-- 查询哪个城市拥有最多的旗？
+select temp.CityID,CityName,count(temp.DisName) cfd from (
+    (select * from t_district where DisName like '%旗' ) as temp
+    join t_city on temp.CityID=t_city.CityID
+) group by temp.CityID order by cfd desc limit 1;
+
+-- 查询省级行政区有哪几种？
+select ProName from t_province where ProName like '%行政区';
+
+-- 查询全国有多少县级市？
+select count(*) from t_district where DisName like '%市';
+
+-- 查询全国叫x县的地级市？
+select * from t_city where CityName like '%县';
+
+-- 安徽的县级市数量
+select ProName,count(t_district.CityID) as Cities from (
+    t_province join t_city on t_province.ProID = t_city.ProID
+        join t_district  on t_city.CityID = t_district.CityID
+) where ProName='安徽省'and DisName like '%市';
+
+-- 哪个省的县级市最多
+select ProName,count(t_district.CityID) cc from (
+    t_province join t_city on t_province.ProID = t_city.ProID
+        join t_district  on t_city.CityID = t_district.CityID
+) where DisName like '%市'
+group by t_province.ProID
+order by cc desc ;

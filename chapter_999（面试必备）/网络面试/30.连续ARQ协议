@@ -1,0 +1,5 @@
+ARQ协议，即自动重传请求（Automatic Repeat-reQuest），是OSI模型中数据链路层和传输层的错误纠正协议之一。
+它通过使用确认和超时这两个机制，在不可靠服务的基础上实现可靠的信息传输。
+如果发送方在发送后一段时间之内没有收到确认帧，它通常会重新发送。ARQ包括停止等待ARQ协议和连续ARQ协议，
+拥有错误检测（Error Detection）、正面确认（Positive Acknowledgment）、超时重传（Retransmission after Timeout）和
+负面确认及重传（Negative Acknowledgment and Retransmission）等机制。

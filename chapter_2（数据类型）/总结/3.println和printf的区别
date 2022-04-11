@@ -1,0 +1,5 @@
+fmt.Println("a=",a)
+fmt.Printf("a=%d",a)
+
+Println打印并换行
+Printf用于格式化输出

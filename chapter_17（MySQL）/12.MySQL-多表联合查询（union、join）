@@ -1,0 +1,48 @@
+-- union（强制整合数据到一张表，查询列数必须一致）
+-- 联合查询中国各个省份的ID、名字;河北省所有地级市的ID、名字
+select ProID,ProName from t_province
+union
+select CityID,CityName from t_city where ProID=(select ProID from t_province where ProName='河北省');
+
+
+-- join
+-- 查询河北省有多少地级市
+select ProName,CityName from (
+    t_city join t_province on t_city.ProID = t_province.ProID
+) where ProName='河北省';
+
+-- 统计各省地级市的数量，输出省名、地级市数量
+select ProName,count(CityID) as Cities from (
+   t_city join t_province on t_city.ProID = t_province.ProID
+) group by t_city.ProID order by Cities desc;
+
+-- 求每个省份中最大的城市ID和城市名称
+select t_city.CityID,CityName from (
+    t_city join t_province on t_city.ProID = t_province.ProID
+)group by t_city.ProID order by CityID desc;
+
+-- 地级市最多的省份取前十名
+select t_city.ProID,ProName,count(t_city.ProID) as Cities from (
+   t_city join t_province on t_city.ProID = t_province.ProID
+)group by ProID order by Cities desc limit 10;
+
+-- 查询拥有区县最多的城市的前十名
+select t_city.CityID,CityName, count(t_city.CityID) as Districts from (
+    t_city join t_district td on t_city.CityID = td.CityID
+)group by t_city.CityID order by Districts desc limit 10;
+
+-- 查询拥有20个以上区县的城市，输出城市名、区县数量
+select t_city.CityID,CityName, count(t_city.CityID) as Discount from (
+    t_city join t_district on t_city.CityID = t_district.CityID
+)group by t_city.CityID having Discount >= 20;
+
+-- 区县最多的城市是什么省什么市，输出包括省名、市名、区县数量
+select t_province.ProName, CityName, temp.ci from (
+    select ProID,CityName,count(ID) as ci from (
+        t_city join t_district td on t_city.CityID = td.CityID
+    )group by t_city.CityID order by ci desc
+)temp join t_province on temp.ProID=t_province.ProID
+where ProRemark != '直辖市' limit 5;
+
+
+

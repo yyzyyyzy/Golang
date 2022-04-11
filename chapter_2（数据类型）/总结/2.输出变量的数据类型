@@ -1,0 +1,11 @@
+输出变量的数据类型
+
+方法一（格式化输出Printf）
+fmt.Printf("num的数据类型为：%T\n", num)
+
+方法二（导入reflect包，使用reflect.TypeOf(xxx)函数）
+fmt.Println("num的数据类型为：", reflect.TypeOf(num))
+
+输出变量所占用的字节数
+方法一（导入unsafe包，使用unsafe.Sizeof(xxx)函数）
+fmt.Println("num所占用的字节数为：", unsafe.Sizeof(xxx))

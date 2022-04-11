@@ -1,0 +1,130 @@
+1.方法本质上就是函数，方法接收者就是隐含的第一个参数类似于python的self 和java的this
+
+①值接收者堆栈调用情况：（结构体作为方法的参数是值传递无法修改局部变量）
+    type A struct {
+        name string
+    }
+
+    func (a A) Name() string { //A作为参数值拷贝
+        a.name = "Hi! " + a.name
+        return a.name
+    }
+    func main() {
+        a := A{"eggo"} //局部变量a{data=addr1(数据段上存储eggo)，size = 4}未被影响
+        fmt.Println(a.Name())
+        fmt.Println(A.Name(a))
+        fmt.Println(a) //输出{"eggo"}
+    }
+
+1.堆上存储字符串的字符串内容（指针），地址为addr1；栈存储局部变量a{data = addr1，字节数目为4}，传参是值拷贝，栈的参数空间存储{data = addr1，字节数目为4}
+2.a.name在堆上重新定义了字符串内容（指针），地址为addr2，同时修改了栈参数空间的内容{data = addr1，字节数目为4} ==> {data = addr2，字节数目为8}
+3.返回值空间返回了新的a.name{data = addr2，字节数目为8}，但并没有修改局部变量a的内容
+
+
+②指针接收者堆栈调用情况：（结构体指针作为方法的参数是引用传递可以修改局部变量）
+    type A struct {
+        name string
+    }
+
+    func (pa *A) Name() string { //*A是作为参数值拷贝
+        pa.name = "Hi! " + pa.name
+        return pa.name
+    }
+    func main() {
+        a := A{"eggo"} //局部变量
+        pa := &a //局部变量
+        fmt.Println(pa.Name())
+        fmt.Println(a) //输出{"Hi eggo"}
+    }
+
+1.堆上存储字符串的字符串内容（指针），地址为addr1；栈存储局部变量a{data = addr1，字节数目为4}，传参是值拷贝，栈的参数空间存储{data = addr1，字节数目为4}
+2.同时还有一个pa指针作为局部变量pa{data = &a}
+3.pa.name() 转换为 (*A).Name(pa)，被调用方法传参值拷贝，参数空间为pa = &a
+4.pa.name修改pa就是修改&a，也就是修改局部变量a{data = addr1，字节数目为4}，堆上生成新的字符串内容"Hi! eggo"，局部变量a修改为{data = addr2，字节数目为8}
+5.返回值同样拷贝局部变量a的内容{data = addr2，字节数目为8}
+
+ps：
+    type A struct {
+        name string
+    }
+
+    func (a A) GetName() string {
+        return a.name
+    }
+    func (pa *A) SetName() string {
+        pa.name = "Hi" + pa.name
+        return pa.name
+    }
+
+    func main() {
+        a := A{"eggo"}
+        pa := &a
+        fmt.Println(pa.GetName()) //指针 调用 值接收者的方法
+        fmt.Println(a.SetName()) //值 调用 指针接收者的方法
+    }
+1.属于Golang的语法糖，编译阶段会转化成：
+pa.GetName() ~ (*pa).GetName()
+a.SetName() ~ (&a).SetName()
+
+③方法赋值给变量堆栈调用情况：
+    type A struct {
+        name string
+    }
+
+    func (a A) GetName() string {
+        return a.name
+    }
+
+    func main() {
+        a := A{name:"eggo"}
+        f1 := A.GetName //方法表达式（本质上也是一个functionvalue）
+        f1(a)
+
+        f2 := a.GetName //方法变量（本质上也是一个functionvalue，也会捕获方法接收者a，形成闭包）
+        f2()
+    }
+
+1.函数作为局部变量、参数、返回值时，都是以FunctionValue的形式存在的，闭包就是有捕获列表的FunctionValue
+2.f1 := A.GetName 就是方法表达式，本质上就是一个FunctionValue结构体的指针
+3.f2 := a.GetName 就是方法变量，本质上也是一个FunctionValue结构体的指针，同时捕获方法接收者a，形成闭包
+
+type A struct {
+    name string
+}
+
+func (a A) GetName() string {
+    return a.name
+}
+
+func GetFunc() func() string {
+    a := A{name: "lzk in getfunc"}
+    return a.GetName
+}
+
+func main() {
+    a := A{name: "lzk in main"}
+    f2 := a.GetName
+    fmt.Println(f2()) //
+
+    f3 := GetFunc()
+    fmt.Println(f3()) //输出lzk in getfunc
+}
+
+1.f2作为方法表达式会被编译器优化为A.GetName(a)的函数调用，输出lzk in main
+2.f3作为方法变量，返回的也是方法变量，捕获了局部变量a，形成闭包，输出lzk in getfunc；等价于：
+    func GetFunc() func string {
+        a := A{name: "lzk in getfunc"}
+
+        return func() string{
+            return A.GetName(a)
+        }
+    }
+3.方法表达式和方法变量都是FunctionValue（函数作为返回值、参数），区别在于方法变量就是捕获了接收者的FunctionValue
+
+
+
+1.方法本质上就是函数，方法接收者就是隐含的第一个参数类似于python的self 和java的this
+2.方法接收者分为值接收者和指针接收者，如果需要改变局部变量的值，需要用到指针接收者
+3.同时golang编译器有语法糖进行优化，值可以调用指针接收者的参数，指针可以调用值接收者的参数
+4.函数作为局部变量、参数、返回值时，都是以FunctionValue的形式存在的，
+5.方法表达式本质上就是一个FunctionValue，方法变量也是FunctionValue，同时捕获方法接收者a，形成闭包

@@ -1,0 +1,13 @@
+container 中的循环列表是采用链表实现的。
+
+
+func New(n int) *Ring {}                        // 构造一个包含N个元素的循环列表
+func (r *Ring) Next() *Ring {}                  // 返回列表下一个元素
+func (r *Ring) Prev() *Ring {}                  // 返回列表上一个元素
+func (r *Ring) Move(n int) *Ring {}             // 移动n个元素 （可以前移，可以后移）
+func (r *Ring) Link(s *Ring) *Ring {}           // 把 s 链接到 r 后面。如果s 和r 在一个ring 里面，会把r到s的元素从ring 中删掉
+func (r *Ring) Unlink(n int) *Ring {}           // 删除n个元素 （内部就是ring 移动n个元素，然后调用Link)
+func (r *Ring) Len() int {}                     // 返回Ring 的长度，时间复杂度 n
+func (r *Ring) Do(f func(interface{})) {}       // 遍历Ring，执行 f 方法 （不建议内部修改ring）
+
+访问Ring 中元素，直接 Ring.Value 即可。

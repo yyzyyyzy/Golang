@@ -1,0 +1,196 @@
+反射使用场景：
+1.有时你需要编写一个函数，但是并不知道传给你的参数类型是什么，可能是没约定好；也可能是传入的类型很多，这些类型并不能统一表示。这时反射就会用的上了。
+2.有时候需要根据某些条件决定调用哪个函数，比如根据用户的输入来决定。这时就需要对函数和函数的参数进行反射，在运行期间动态地执行函数。
+
+
+①读懂reflect包的Typeof函数（第一行）
+func Typeof(i interface{}) Type {                    //Typeof函数的返回值是Type接口
+    eface := *(*emptyInterface) (unsafe.Pointer(&i))
+    return toType(eface.typ)
+}
+
+type Type interface {
+	Align() int                             //对齐边界
+	FieldAlign() int
+	Method(int) Method                      //方法
+	MethodByName(string) (Method, bool)
+	NumMethod() int
+	Name() string                           //类型名称
+	PkgPath() string                        //包路径
+	Size() uintptr                          //类型大小
+	Kind() Kind
+	Implements(u Type) bool                 //是否实现指定接口
+	Comparable() bool                       //是否可比较
+	Bits() int
+	ChanDir() ChanDir
+	IsVariadic() bool
+	Elem() Type                             //取元素（相当于*操作）
+	Field(i int) StructField
+	FieldByName(name string) (StructField, bool)                    //查找结构体中给定的字段
+	FieldByNameFunc(match func(string) bool) (StructField, bool)
+	In(i int) Type
+	Key() Type
+	Len() int
+	NumField() int
+	NumIn() int
+	NumOut() int
+	Out(i int) Type
+
+	common() *rtype
+	uncommon() *uncommonType
+}
+
+例一：
+    packege eggo
+
+    type Eggo struct {
+        Name string
+    }
+    func (e Eggo) A() {
+        println("A")
+    }
+    func (e Eggo) B() {
+        println("B")
+    }
+
+    func main() {
+        a := eggo.Eggo{Name: "eggo"}
+        t := reflect.Typeof(a)
+
+        println(t.Name(), t.NumMethod())
+    }
+
+1.栈帧中局部变量为a的结构体，reflect.Type类型的t，然后是返回值空间和参数空间（Typeof函数的形参是一个地址）
+2.编译阶段会增加一个临时变量作为a的拷贝，golang中所有类型都实现了空接口，所以参数a是空接口类型eface{*_type指向_type, data=&(copy of a)}，
+  参数空间可以使用a拷贝后的地址，这样满足了临时变量值拷贝的语义，也满足了Typeof函数空接口形参的需求
+
+
+
+②读懂reflect包的Typeof函数（第二行和第三行）
+func Typeof(i interface{}) Type {
+    eface := *(*emptyInterface) (unsafe.Pointer(&i)) //(unsafe.Pointer(&i))为runtime.eface类型的参数转换成reflect.emptyInterface类型并赋给变量eface
+    return toType(eface.typ)
+}
+
+
+    type eface struct {
+        _type *_type         //记录数据是什么类型，_type指向接口的动态类型元数据
+        data  unsafe.Pointer //记录数据在哪（指针），data指向接口的动态值
+    }
+
+    type emptyInterface struct {
+    	typ  *rtype          //记录数据是什么类型，typ指向接口的动态类型元数据
+    	word unsafe.Pointer  //记录数据在哪（指针），word指向接口的动态值
+    }
+
+    type rtype struct {
+    	size       uintptr
+    	ptrdata    uintptr
+    	hash       uint32
+    	tflag      tflag
+    	align      uint8
+    	fieldAlign uint8
+    	kind       uint8
+    	equal     func(unsafe.Pointer, unsafe.Pointer) bool
+    	gcdata    *byte
+    	str       nameOff
+    	ptrToThis typeOff
+    }
+
+    func toType(t *rtype) Type {
+    	if t == nil {
+    		return nil
+    	}
+    	return t
+    }
+
+1.eface和emptyInterface结构体的结构相同，方便reflect包操作内部元素，_type和Type结构体结构是一致的
+2.*rtype类型实现了Type接口，Typeof函数通过toType函数把eface.typ包装成reflect.Type类型的返回值，Typeof的任务完成
+3.非空接口iface{itab{reflect.Type, *rtype, hash, -, fun}, data=eface.typ（反射变量的类型元数据地址）}，
+  fun对应的方法就是从eface.typ指向的类型元数据读取各种信息。
+4.栈帧返回值空间存储{data=&Eggotype, tab（由接口类型：reflect.Type和动态类型：*rtype组合）},
+  局部变量t存储{data=&Eggotype, tab}，通过t调用Name和NumMethod方法，会去Eggotype类型元数据查找相关信息
+5.Eggotype{structtype, uncommonType, ..., method[0]=A, method[1]=B}
+
+
+③读懂reflect包的Valueof函数:
+
+    type Value struct {
+        typ *rtype          //存储反射变量的类型元数据指针
+        ptr unsafe.Pointer  //存储数据地址
+        flag                //位标识符（存储反射值的描述信息（是否为指针？是否为方法？是否只读？））
+    }
+
+    func Valueof(i interface{}) Value {
+        if i == nil {
+            return Value{}
+        }
+        escapes(i)
+        return unpackEface(i)
+    }
+
+1.通常会用reflect.Valueof来拿到reflect.Value,所以和Typeof参数处理方式相同，Valueof会把形参指向的变量逃逸到堆上
+
+例二：（反射局部变量a）
+    func main() {
+        a := "eggo"
+        v := reflect.ValueOf(a)
+        v.SetString("new eggo")
+        Println(a)
+    }
+
+1.局部变量a逃逸到堆上{data, len=4}，栈上存储a的地址&(copy of a)
+2.返回值空间{typ = &(stringtype), ptr = &(copy of a), flag}
+  参数空间{_type = &(stringtype)（string类型元数据）, data = &(copy of a)}
+3.局部变量v就等于返回值空间存储的内容{typ = &stringtype, ptr = &(copy of a), flag}
+4.通过v调用SetString，由于ptr指向的是a的堆上拷贝空间而不是栈上的局部变量栈帧，所以会发生panic
+
+
+例三：（反射局部变量a的指针）
+    func main() {
+        a := "eggo"
+        v := reflect.ValueOf(&a)
+        v = v.Elem() //reflect包内的Elem方法：取地址
+        v.SetString("new eggo")
+        Println(a)
+    }
+
+1.局部变量a逃逸到堆上{data, len=4}，栈上存储a的地址&a
+2.返回值空间{typ = &(*stringtype), ptr = &a, flag}
+  参数空间{_type = &(*stringtype)（string类型元数据）, data = &a}
+3.局部变量v就等于返回值空间存储的内容{typ = &(*stringtype), ptr = &a, flag}
+4.然后调用v.Elem()方法，拿到v.ptr指向的变量a，并包装成reflect.Value类型的返回值{typ = &(stringtype), ptr = &a, flag}
+5.局部变量v被赋值为{typ = &(stringtype), ptr = &a, flag}
+6.通过v调用SetString，v作为第一个参数{typ = &(stringtype), ptr = &a, flag}，
+  字符串新值"new eggo"作为第二个参数{data = addr2, len = 8}
+7.v.ptr指向堆上变量a{data = &addr1, len = 4}修改后为a{data = addr2, len = 8}
+
+------------------------------------------------------------------------------------------------------------------------
+1.反射使用场景：
+    1.抓取数据类型、值
+    2.不知道接口调用哪个函数，可以根据参数确定调用的接口（对函数/方法反射）
+    3.json序列化和反序列化、Tag（基于反射实现的）
+
+2.reflect.TypeOf:
+    func TypeOf(i interface{}) Type {
+        eface := *(*emptyInterface) (unsafe.Pointer(&i))  //runtime.eface类型的参数转换成reflect.emptyInterface类型并赋给变量eface
+        return toType(eface.typ)                          //包装成reflect.TypeOf反射类型
+    }
+    1.runtime包的类型都是未导出的，所以reflect包又定义了一套类型，两者保持一致
+    2.局部变量会拷贝一份到栈上，reflect.TypeOf()参数为空接口类型，需要传递栈上局部变量拷贝后的地址，从而实现传值的语义
+    3.所以reflect.TypeOf可以把空接口类型转换成反射类型（非空接口类型）
+
+3.reflect.ValueOf:
+    func Valueof(i interface{}) Value {
+        if i == nil {
+            return Value{}
+        }
+        escapes(i) //参数变量逃逸到堆上
+        return unpackEface(i)
+    }
+    1.局部变量会拷贝一份到堆上，栈上只留地址，修改局部变量需要反射局部变量的指针，使用Elem方法指向堆上的地址，在指向栈上存储的数据
+
+反射三定律：
+1.反射可以将“接口类型变量”转换为“反射类型对象”
+2.反射可以将“反射类型对象”转换为“接口类型变量”
+3.如果需要修改变量，其值需要是“可写的”

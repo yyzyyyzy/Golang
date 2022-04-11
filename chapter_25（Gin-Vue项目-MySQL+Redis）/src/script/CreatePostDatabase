@@ -1,0 +1,12 @@
+use blog;
+create table post (
+    id bigint(20) primary key auto_increment,
+    post_id char(36) not null unique,
+    user_id bigint(20) not null,
+    category_id  bigint(20) not null,
+    title varchar(50) not null,
+    head_img varchar(255),
+    content text not null,
+    create_time timestamp not null default current_timestamp comment '创建时间',
+    update_time timestamp not null default current_timestamp on update current_timestamp comment '更新时间'
+);

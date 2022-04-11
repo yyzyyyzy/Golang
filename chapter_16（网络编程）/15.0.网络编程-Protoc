@@ -1,0 +1,31 @@
+1.go get github.com/golang/protobuf
+2.进入github.com/golang/protobuf/protoc-gen-go
+3.go build .
+
+
+1.下载 protoc （https://github.com/protocolbuffers/protobuf/releases）
+2.解压出来把protoc的bin目录放在直接放在系统变量当中
+3.编写hello.proto测试
+    syntax = "proto3";
+
+    option go_package="./;hello";
+    package hello;
+
+    message Hello {
+
+        string name = 1;
+        int32 age = 2;
+        string addr = 3;
+
+    }
+
+4.protoc --go_out=./ hello.proto                  针对rpc生成go文件
+5.protoc --go_out=plugins=grpc:. hello.proto      针对grpc生成go文件(同时需要将protoc.exe移到对应目录下)
+
+
+protobuf简介：
+1.开源的数据协议（python\java\golang都可以支持）
+protobuf使用场景：
+1.不用重复编写编码解码代码
+2.避免TCP粘包问题
+3.支持多种语言，版本兼容性高

@@ -1,0 +1,5 @@
+zadd mzset 10 bill 9 jobs 6 jackma // 添加多个值及相应权重
+zrange mzset 0 -1 // 返回第一个到最后一个之间所有的元素，按权重升序排列
+zcard mzset // 元素个数
+zcount mzset 6 10 // 权重6-10之间的元素个数
+zscore mzset jackma // 返回 jackma在mzset中的权重

@@ -1,0 +1,2 @@
+Go语言中的零值是变量没有做初始化时系统默认设置的值。
+bool、string、int、pointer、map、chan、func、interface零值都是nil

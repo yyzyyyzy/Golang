@@ -1,0 +1,4 @@
+1.在SELECT * FROM 表时，被HUNG住，是由于在解析这个SQL时，等待LIBRARY CACHE LOCK。并不是不能查数据，是在解析SQL时就HUNG住了。
+比如你在一个会话中CREATE TABLE A AS SELECT * FROM BIG_TABLE，如果这个语句执行很长时间，你在另一个会话中SELECT * FROM A WHERE ROWNUM=1就会被HUNG住
+
+2.有锁在这个表上

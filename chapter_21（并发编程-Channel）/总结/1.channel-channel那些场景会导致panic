@@ -1,0 +1,10 @@
+①panic发生的场景：
+channel关闭后，再向channel中写入数据会panic
+channel关闭后，再次关闭channel，会panic
+关闭未初始化的channel，会panic
+
+②注意事项：
+channel关闭后，可以继续从channel中接收数据
+当channel关闭且缓冲区为0时，继续从channel接收数据会接收到一个channel定义类型的零值
+channel先进先出
+Close()会广播读取的协程停止阻塞

@@ -1,0 +1,17 @@
+1.函数名和方法名重名不会影响调用，但是相同对象不能有重名的方法
+
+func (c cat) show() {
+	fmt.Println("喵喵")
+}
+
+func show() {
+	fmt.Println("呱呱")
+}
+
+func main() {
+    c1 := cat{
+        name: "咪咪",
+        age:  3,
+    }
+    c1.show()
+}

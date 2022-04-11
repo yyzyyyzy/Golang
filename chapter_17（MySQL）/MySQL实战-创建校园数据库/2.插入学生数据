@@ -1,0 +1,12 @@
+insert into student(name,gender) values ('张三丰',1);
+insert into student(name,gender) values ('野间忠一郎',1);
+insert into student(name,gender) values ('二郎神',1);
+insert into student(name,gender) values ('郭小四',0);
+insert into student(name,gender) values ('隔壁老王',1);
+insert into student(name,gender) values ('练过的六爷',1);
+insert into student(name,gender) values ('洪七公',1);
+insert into student(name,gender) values ('香香八婆',0);
+insert into student(name,gender) values ('马英九',1);
+insert into student(name,gender) values ('十三姨',0);
+insert into student(name,gender) values ('山本五十六',1);
+insert into student(name,gender) values ('包租婆',0);

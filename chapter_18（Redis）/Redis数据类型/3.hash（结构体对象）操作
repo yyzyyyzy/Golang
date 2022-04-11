@@ -1,0 +1,13 @@
+hset p1 name bill // 设置p1对象的name为bill
+hset p1 age 18 // 设置p1对象的age为18
+hmset p2 name jobs age -1 //设置p2对象的name为jobs，age为-1
+hget p1 name // 获取p1的name属性值
+hmget p1 name age // 同时获取p1的name和age
+hgetall p1 // 获取p1的全部字段和值
+hkeys p1 // 获取p1的全部字段
+hvals p1 // 获取p1的全部字段值
+hlen p1 // 获取p1中所有字段数
+hexists p1 name // 判断p1中是否有name字段
+hdel p1 name // 删除p1中的name字段
+hdel p2 name age // 删除p2中的name和age字段
+hstrlen p1 age // p1中的age的长度

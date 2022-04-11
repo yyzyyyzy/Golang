@@ -1,0 +1,32 @@
+-- 创建校园数据库
+create database campus charset=utf8;
+
+-- 老师表字段：自增长主键id、姓名（非空）、性别（非空）、课程id（默认0）、是否班主任（默认0）；
+create table teacher(
+    id integer primary key auto_increment,
+    name varchar(10) not null,
+    gender integer not null,
+    courseid integer default 0,
+    isMaster integer default 0
+);
+
+-- 学生表字段：自增长主键id、姓名（非空）、性别（非空）、班级id（默认0）；
+create table student(
+    id integer primary key auto_increment,
+    name varchar(10) not null,
+    gender integer not null,
+    classid integer default 0
+);
+
+-- 班级表字段：自增长主键id、名称（非空）、班主任id（默认0）；
+create table clazz(
+    id integer primary key auto_increment,
+    name varchar(20) not null ,
+    masterid integer default 0
+);
+
+-- 课程表字段：自增长主键id、名称（非空）；
+create table course(
+    id integer primary key auto_increment,
+    name varchar(10) not null
+);

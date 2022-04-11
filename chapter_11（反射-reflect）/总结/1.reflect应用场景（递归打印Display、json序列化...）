@@ -1,0 +1,13 @@
+反射的作用：
+1.抓取数据类型、值
+2.不知道接口调用哪个函数，可以根据参数确定调用的接口（对函数/方法反射）
+3.json序列化和反序列化（基于反射实现的）
+
+反射的转换：
+1.变量和interface：
+  通过传递参数可以将变量转换为接口；
+  通过类型断言可以将接口转换为变量；
+
+2.interface和reflect.Value：
+  通过reflect.Value()函数将接口转换为reflect.Value变量
+  通过reflect.Value.interface{}转换为interface

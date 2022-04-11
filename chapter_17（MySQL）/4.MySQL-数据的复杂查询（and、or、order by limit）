@@ -1,0 +1,26 @@
+-- and/or
+-- 找出区县表中不是区、县的名字
+
+select * from t_district where (DisName not like '%区') and (DisName not like '%县');
+
+-- 找出内蒙和新疆的地级市
+select * from t_province where (ProName like '内蒙%') or (ProName like '新疆%');
+select * from t_city where (ProID=24) or (ProID=5);
+
+
+
+
+-- order by/limit
+-- 查找河北省所有城市，按照CityId降序/升序排序，取前五名
+
+select * from t_province where ProName like '河北%';
+desc t_city;
+select * from t_city where ProID=3 order by CityID desc limit 5;
+select * from t_city where ProID=3 order by CityID asc limit 5;
+
+
+
+-- distinct（不重复输出结果）
+-- 查找城市表中所有的ProID,不重复输出结果
+
+select distinct ProID from t_city ;

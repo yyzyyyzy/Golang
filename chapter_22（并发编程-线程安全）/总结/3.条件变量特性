@@ -1,0 +1,22 @@
+条件变量：
+本身不是锁，但是经常和锁结合使用。对应有3个常用方法。wait，signal，broadcast
+1、func (c *cond) Wait()
+该函数的作用可归纳为三点：
+a)阻塞等待条件变量满足
+b)释放已经掌握的互斥锁，相当于cond.Unlock()。
+注意：这两步为一个原子操作
+c)当被唤醒，Wait()函数返回时，解除阻塞并重新获取互斥锁，相当于cond.lock()
+2、func(c *cond) Signal()
+单发通知，给一个正在等待（阻塞）在该条件变量上的goroutine发送通知。
+3、func(c *cond) Broadcast()
+广播通知，给正在等待（阻塞）在该条件变量上的所有goroutine发送通知。
+
+流程：
+1、创建条件变量：var cond sync.Cond。
+2、指定条件变量用的锁：cond.L = new(sync.Mutex)。
+3、cond.L.lock给公共区加锁。
+4、判断是否到达阻塞条件（缓冲区满/空）---for 循环判断。
+for len(ch) == cap(ch) {cond.wait()---1) 阻塞2)解锁3)加锁}。
+5、访问公共区域 ----读、写数据。
+6、解锁条件变量的锁cond.unlock()。
+7、唤醒阻塞在条件变量上的对端。

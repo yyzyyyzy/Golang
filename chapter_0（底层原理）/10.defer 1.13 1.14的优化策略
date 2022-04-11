@@ -1,0 +1,60 @@
+defer（1.12）源码：
+                func A() {
+                    r = deferproc(8, B) //deferproc()注册defer函数
+                    if r > 0 {
+                        goto ret
+                    }
+                    ....
+                    runtime.deferreturn()   //执行注册的defer函数B
+                    return
+                ret:
+                    runtime.deferreturn
+                }
+
+defer（1.13）源码：
+                func A() {
+                    var d struct {
+                        runtime._defer
+                        i int
+                    }
+                    d.siz = 0
+                    d.fn = 0
+                    d.i = 10
+                    f := runtime.deferprocStack(&d._defer)
+                    if r > 0 {
+                        goto ret
+                    }
+                    ...
+                    runtime.deferreturn
+                    return
+                ret:
+                    runtime.deferreturn
+                }
+不同点：
+1.defer（1.12）通过deferproc注册函数信息，_defer结构体分配在堆上；而defer（1.13）增加局部变量，将_defer结构体分配在栈上，
+  再通过deferprocStack函数将结构体添加到defer链表中，减少了defer信息的堆分配（循环中的defer还是会用1.12版本的处理方式）
+2.1.13版本的_defer结构体增加了heap字段，用于记录是否是堆分配
+3.defer函数执行时，1.12版本会在堆栈间拷贝参数，而1.13版本是从栈的局部变量空间拷贝到参数空间
+4.1.13版本性能提升30%
+
+
+defer（1.14）：
+1.在 Go1.14 之前，Go 中的每一个 defer 函数，会在编译期在 defer 位置生成一个 runtime.deferproc 调用，避免生成_defer结构体和defer链表
+  并且在包含 defer 的函数退出时生成一个 runtime.deferreturn 调用。
+2.编译器会在某些场景下尝试在函数返回处直接调用被 defer 的函数，从而使得使用 defer 的开销就像一个常规函数调用一样，例如：
+  0: func run() {
+  1:    defer foo()
+  2:    defer bar()
+  3:
+  4:    fmt.Println("hello")
+  5: }
+编译器将生成如下的代码：
+                    fmt.Println("hello")
+
+                    bar()
+                    foo()
+
+3.如果发生panic或者调用runtime.Goexit()函数，那么仍然需要执行defer链表，需要额外通过栈扫描的方式实现，1.14版本的_defer结构体再次增加了
+  openDefer、fd、varp、framepc字段可以通过这些字段找到未注册链表的defer函数，按照1.13版本的顺序执行
+4.在panic情况下，defer性能再次下降，正常运行时，defer提升巨大
+

@@ -1,0 +1,4 @@
+insert into teacher(name,gender) values ('bill',1);
+insert into teacher(name,gender) values ('steve',1);
+insert into teacher(name,gender) values ('jackma',1);
+insert into teacher(name,gender) values ('robin',1);

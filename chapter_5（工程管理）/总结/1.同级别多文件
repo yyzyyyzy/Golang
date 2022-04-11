@@ -1,0 +1,6 @@
+src 源码存放区域 需要手动创建
+pkg 由go install 导入的代码包
+bin .go文件编译后的可执行文件.exe
+
+
+

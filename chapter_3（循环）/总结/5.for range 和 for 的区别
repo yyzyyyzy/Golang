@@ -1,0 +1,12 @@
+1.for range可以完成所有for可以做的事情，却能做到for不能做的
+2.for range为键值循环，可以结合匿名变量打印部分输出
+    for _, value := range m {
+        fmt.Println(value)
+    }
+
+3.Go 语言可以使用 for range 遍历数组、切片、字符串、map 及通道（channel）。通过 for range 遍历的返回值有一定的规律：
+  数组、切片、字符串 返回索引和值。
+  map 返回键和值。
+  通道（channel）只返回通道内的值。
+
+4.for range创建了每个元素的副本，不是直接返回每个元素的引用

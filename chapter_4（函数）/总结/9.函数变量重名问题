@@ -1,0 +1,31 @@
+1.局部变量在函数内部是唯一的，而for循环相当于一个新的函数;
+2.在golang的for循环中，循环内部创建的函数变量都是共享同一块内存地址;
+  for循环总是使用同一块内存去接收循环中的的value变量的值,不管循环多少次，value的内存地址都是相同的
+3.可以重新定义一个变量去接收重名变量
+
+①错误实例：
+package main
+
+import "fmt"
+
+func main() {
+	var i int = 100
+	for i = 0; i <= 5; i++ {
+		fmt.Println(i, &i)
+	}
+	fmt.Println(i, &i)
+}
+
+②正确用法：
+package main
+
+import "fmt"
+
+func main() {
+	var i int = 100
+	temp := 100
+	for i = 0; i <= 5; i++ {
+		fmt.Println(i, &i)
+	}
+	fmt.Println(temp, &temp)
+}

@@ -1,0 +1,15 @@
+HTTP request和response：
+具有相同的结构：
+    1.请求/响应行
+    2.0~N个Header
+    3.空行
+    4.可选的消息体（body）
+
+Golang中net/http包用于表示HTTP消息的结构：
+1.Request是一个struct，代表了客户端发送的HTTP请求消息：
+    URL
+    Header
+    Body
+    Form、PostForm、MutipartForm
+  也可以通过Request方法访问请求中的Cokkie、URL、User-Agent等信息
+  同时Request既可以用在客户端也可以用在服务端

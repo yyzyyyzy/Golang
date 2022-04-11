@@ -1,0 +1,5 @@
+1.Type：Go 程序中的类型（Type）指的是系统原生数据类型，如 int、string、bool、float32 等类型，和type自定义的数据类型
+2.Kind：种类（Kind）指的是对象归属的品种
+
+总结：
+1.kind是Type的超集(kind: ptr, Type: *float64)

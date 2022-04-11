@@ -1,0 +1,106 @@
+consul角色：
+
+    1.Server:
+    参与共识仲裁（raft）
+    存储机器状态(日志存储）
+    处理查询
+    维护周边（LAN/WAN) 节点之间的关系
+
+    2.Client:
+    负责通过该节点注册到 Consul 微服务的健康检查
+    将客户端的注册请求和查询转换为 server 的 RPC 请求
+    维护周边各节点（LAN/WAN) 的关系
+
+consul模式
+
+    1.C/S架构（可以运行 Client-Server 模式 或 纯 Server 模式）
+    2.每一个数据中心运行三到五个server服务节点，防止数据丢失
+
+
+consul安装与使用
+    https://www.consul.io/downloads下载对应的consul版本
+    consul -v
+
+
+    1.consul命令大全
+
+    -server                                 指定节点为server模式
+    -bootstrap-expect 2                     通知consul server我们现在准备加入的server节点个数，延迟日志复制的启动直到指定数量的server节点加入后启动
+    -data-dir /D:/consul/tmp                指定agent储存状态的数据目录
+    -node=n1                                指定节点在集群中的名称
+    -bind=192.168.xxx.xxx                   指明节点的IP地址
+    -ui                                     web端网页显示
+    -config-dir /D:/consul/config/consul.d  指定service的配置文件和检查定义所在的位置，里面所有json文件都会被加载
+    -rejoin                                 可以忽略结点的离开，再次启动时再次加入此结点
+    -join 192.168.xxx.xxx                   将节点加入到集群
+    -client                                 指定客户端接口的绑定地址,若不指定为127.0.0.1不对外提供服务，指定为0.0.0.0则对外提供服务
+
+    2.服务端和客户端agent启动（准备三台虚拟机）
+
+    ###node1（服务端结点1）：
+    //linux
+    consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n1 -bind=192.168.158.145 -ui -config-dir /etc/consul.d -rejoin -join 192.168.158.145 -client 0.0.0.0
+
+    //windows
+    consul agent -server -bootstrap-expect 2 -data-dir d:/consul/data -node=n1 -bind=127.0.0.1 -ui -config-dir d:/consul/config/consul.d -rejoin -join 127.0.0.1 -client 0.0.0.0
+
+    ###node2（服务端结点2）：
+    consul agent -server -bootstrap-expect 2 -data-dir /tmp/consul -node=n2 -bind=192.168.158.146 -ui -rejoin -join 192.168.158.145
+
+    //windows
+    consul agent -server -bootstrap-expect 2 -data-dir d:/consul/data -node=n2 -bind=127.0.0.2 -ui -rejoin -join 127.0.0.1
+
+    ###node3（客户端结点1）：
+    consul agent -data-dir /tmp/consul -node=n3 -bind=192.168.158.147 -config-dir /etc/consul.d -rejoin -join 192.168.158.145
+
+    //windows
+    consul agent -data-dir d:/consul/data -node=n3 -bind=127.0.0.2 -ui -rejoin -join 127.0.0.1
+
+    3.搭建consul集群命令
+
+    查看集群成员      consul members
+    退出运行        consul leave
+
+    4.服务注册（用户去consul的配置文件中查询或者注册服务）
+
+        1.新建配置文件      mkdir /etc/consul.d
+        2.配置web服务注册的json文件：
+        {
+          "service": {
+            "name": "web",                                  //名称
+            "tags": ["master"],                             //标签
+            "address": "192.168.158.145",                   //ip
+            "port": 9001,                                   //端口
+            "checks": [
+              {
+                "http": "http://localhost:9001/health",
+                "interval": "10s"                           //检查时间
+              }
+            ]
+          }
+        }
+        3.编写测试程序：
+        package main
+
+        import (
+        	"fmt"
+        	"net/http"
+        )
+
+        func handler(w http.ResponseWriter, r *http.Request) {
+        	fmt.Println("Hello web3! this is node3 or node2")
+            fmt.Fprintf(w, "Hello web3! this is node3 or node2") //打印在页面上
+        }
+
+        func healthHandler(w http.ResponseWriter, r *http.Request) {
+        	fmt.Println("node3 or node2")
+        }
+        func main() {
+        	http.HandleFunc("/", handler)
+        	http.HandleFunc("/health", healthHandler)
+        	http.ListenAndServe(":9001", nil)
+
+        }
+        4.启动测试程序
+    
+   

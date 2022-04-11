@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package = "./;helloGrpc";
+package main;
+
+service Greeter {
+  // 服务1
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  // 服务2
+  rpc SayName (NameRequest) returns (NameReply) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+
+message NameRequest {
+  string name = 1;
+}
+
+message NameReply {
+  string message = 1;
+}

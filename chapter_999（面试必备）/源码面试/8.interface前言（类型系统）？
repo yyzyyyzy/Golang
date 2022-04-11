@@ -1,0 +1,66 @@
+①go语言的内置类型：(动态类型：程序运行时系统才能看见的类型//静态类型：就是变量声明的时候的类型)
+                动态类型（空接口）：var i interface{}
+                静态类型：var age int   // int 是静态类型
+                        var name string  // string 也是静态类型
+
+                1.值类型：
+                bool
+                int(32 or 64), int8, int16, int32, int64
+                uint(32 or 64), uint8(byte), uint16, uint32, uint64
+                float32, float64
+                string
+                complex64, complex128
+                array
+                struct
+
+                2.引用类型：
+                slice
+                map
+                chan
+
+1.我们通过type自定义的类型，可以定义方法，而内置类型不能自定义方法；
+
+2.每个类型元数据都需要记录：类型大小、类型名称、对齐边界、是否自定义等等作为每个类型元数据的header（源码地址：runtime/type）
+    type _type struct {
+        size       uintptr  // 类型大小
+        ptrdata    uintptr
+        hash       uint32
+        tflag      tflag
+        align      uint8    //对齐边界
+        fieldAlign uint8
+        kind       uint8
+        equal func(unsafe.Pointer, unsafe.Pointer) bool
+        gcdata    *byte
+        str       nameOff
+        ptrToThis typeOff
+    }
+
+3.在_type结构体之后存储的是类型需要额外描述的信息，例如slice类型的元数据额外记录了其存储元素的类型元数据：
+    type slicetype struct {
+        typ  _type //slice的类型元数据
+        elem *_type //slice存储元素的类型元数据，如果是string类型的slice，那么elem指针就指向stringtype
+    }
+
+4.如果自定义类型，那么会指向一个uncommomtype结构体：
+    type uncommontype struct {
+        pkgpath nameOff //记录类型所在的包路径
+        mcount  uint16 // 记录类型关联的方法数量
+        xcount  uint16 // 记录需要导出的方法数
+        moff    uint32 // 记录方法元数据数组相对于uncommomtype结构体偏移的字节数
+        _       uint32 // unused
+    }
+
+②例如创建一个自定义类型：type mySlice []string
+                     func (ms mySlice) Len() {
+                        fmt.Println("自定义方法1")
+                     }
+                     func (ms mySlice) cap() {
+                        fmt.Println("自定义方法2")
+                     }
+
+1.mySlice的类型元数据首先记录 []string 的类型描述信息
+2.后面加上uncommontype结构体，假设地址为addrA，可以通过addrA+moff偏移量找到方法元数据数组（cap、len）
+
+③别名和自定义的区别
+type Mytype1 = int32 //关联同一种元数据，属于同种类型
+type Mytype1 int32 //自定义类型，Mytype1会多一个uncommontype结构体，不再共用int32类型

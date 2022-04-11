@@ -1,0 +1,15 @@
+数组下标越界(运行时错误)
+panic: runtime error: index out of range
+
+空指针异常(运行时错误)
+panic: runtime error: invalid memory address or nil pointer dereference
+
+类型断言失败(接口转换异常)
+panic: interface conversion: interface {} is string, not int
+
+通道为空，通道已关闭（写数据）
+panic: close of nil channel
+panic: send on closed channel
+
+死锁，所有线程睡眠(致命错误)
+fatal error: all goroutines are asleep - deadlock!

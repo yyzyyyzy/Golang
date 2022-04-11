@@ -1,0 +1,66 @@
+hello.go:
+
+func main() {
+    fmt.Println("hello world")
+}
+
+hello.go文件编译后成为一个hello.exe文件，执行时，hello.exe被加载到内存
+对于进程虚拟地址的代码段，程序执行入口为runtime.main，为执行入口创建main goroutine，main goroutine执行后调用main.main；
+对于进程虚拟地址的数据段，协程对应的数据结构是runtime.g，线程对应的数据结构是runtime.m；
+                     1.全局变量g0是主协程对应的runtime.g，与其他协程不同，主协程对应的协程栈是在主线程栈上分配的
+                     2.全局变量m0是主线程对应的runtime.m，g0持有m0的指针，m0也持有g0的指针，m0主线程先执行的是主协程g0，m0和g0彼此联系起来
+                     3.全局变量allgs记录所有的g，全局变量allm记录所有的m，
+
+最初GMP调度模型中只有M和G，待执行的G协程依次执行（队列），每个来这里的M线程获取一个G协程时都需要加锁，
+多个M分担多个G的执行任务，会因频繁加锁解锁发生等待，影响程序并发性能，后来在G和M以外引入了P。
+P对应的数据结构是runtime.P，runtime.P拥有一个本地队列runq，一个P关联一个M，M就可以从P直接获取待执行的G，不用在全局队列中和别的M争抢P了
+
+                     4.全局变量对应的数据结构是runtime.schedt，记录了所有空闲的M和空闲的P
+                       sched保存了一个全局队列runq，sched代表的是调度器，如果P的本地队列已满，那么等待执行的G会被放到这个全局队列中，
+                       而M会先从关联P持有的本地队列中获取待执行的G，本地队列没有就从调度器持有的全局队列中获取G，如果全局队列也为空，
+                       就从别的P中获取G
+                     5.全局变量allp记录所有的p，在程序初始化过程中，会进行调度器初始化，按照GOMAXPROCS环境变量决定创建多少个p，
+                       保存在allp中，并且把第一个p与m0关联起来
+
+在main goroutine创建之前 GPM模型是这样的： g0-m0-p0
+在main goroutine创建之后，main goroutine加入到p的本地队列中，GPM模型是这样的： g0-m0-p0~main.G
+通过mstart函数开启调度循环，mstart是所有工作线程的入口，会调用schedule()函数执行调度循环，所以一个M要么是在执行G，要么是执行调度程序获取G
+本地队列有main.goroutine等待执行，所以m0切换到main.goroutine，执行入口是runtime.main，
+runtime.main会创建监控线程、进行包初始化、调用main.main，最后输出hello
+在main.main返回后，runtime.main会调用exit()函数结束进程。
+
+
+hello.go:
+
+func main() {
+    go hello()
+}
+
+func hello() {
+    fmt.Println("hello world")
+}
+
+hello.go文件编译后成为一个hello.exe文件，执行时，hello.exe被加载到内存
+程序执行入口为runtime.main，为执行入口创建main goroutine，main goroutine执行后调用main.main，再次创建一个hello goroutine；
+创建hello goroutine协程会被编译器转换为newproc函数调用，
+创建hello goroutine时newproc函数会给此协程分配一个栈帧（为了让此协程结束后，返回到goexit函数中，进行协程资源回收）
+如果我们设置GOMAXPROCS只创建一个p，hello goroutine会被添加到当前p的本地队列；
+然后main.main就结束了，调用exit()函数，进程结束，go hello并没有被执行。
+
+hello.go:
+
+func main() {
+    go hello()
+    time.sleep(time.Second)
+}
+
+func hello() {
+    fmt.Println("hello world")
+}
+
+如果使用time.sleep函数，会调用gopark函数，让当前协程的状态从Grunning变为Gwaiting，main goroutine就不会回到当前p的本地队列中，
+在timer中等待，继而调用schedule()函数进行调度，hello goroutine可以执行，等time.sleep结束后，timer会把main goroutine设置为Grunnable状态
+放回到p的本地队列中，然后main.main就结束了，调用exit()函数，进程结束。
+
+如果创建了多个p，hello goroutine创建之后，默认添加到当前p的本地队列中，当有空闲p的时候，就可以启动新的线程关联到空闲的p，并把hello goroutine
+放入它的本地队列中，也可以使用channle、time.sleep、sync.WaitGroup、context让main.main延迟返回的时间，让别的协程得以执行

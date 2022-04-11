@@ -1,0 +1,5 @@
+第一种方式：time.sleep()
+第二种方式：使用channel机制，每个goroutine传一个channel进去然后往里写数据，在再主线程中读取这些channel，
+          直到全部读到数据了子goroutine也就全部运行完了，那么主goroutine也就可以结束了。这种模式是子线程去通知主线程结束。
+第三种方式：使用context中cancel函数，这种模式是主线程去通知子线程结束。
+第四种方式：sync.WaitGroup模式，Add方法设置等待子goroutine的数量，使用Done方法设置等待子goroutine的数量减1，当等待的数量等于0时，Wait函数返回。

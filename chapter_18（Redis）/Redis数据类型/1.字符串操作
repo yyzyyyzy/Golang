@@ -1,0 +1,17 @@
+set name bill //设置键值
+setex name 20 bill //键值20秒后过期
+mset age 60 gender male //一次性存储多个键值
+get name //不存在则返回null
+mget name age //一次性拿取多个键值
+incr/decr age //将age加减1
+incrby/decrby age 20 //将age加减20
+append name gates //向原有value追加内容
+strlen key //获取值长度
+
+bitcount name //获得name值占用的比特数
+getrange name 0 2 //从name的值上截取子串
+getset name 你妹 //为name设置新值，返回之前的旧值
+incrbyfloat age 0.5 //将age的值增减一个浮点数
+msetnx name bill age 60 //只有当键不存在时才设置值
+psetex name 5000 bill //设置name的值为bill并设置过期时间为5000毫秒
+setnx name bill //只有当name不存在时才将其值设置为bill

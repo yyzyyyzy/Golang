@@ -1,0 +1,15 @@
+-- 插入数据
+insert  into person(name, age, sex, rmb) values ('李子康', 18, true, 3000.15);
+insert  into person(name, age, sex, rmb, word) values ('戴超', 18, true, 2500.16, '我是巨人身后的专家');
+insert  into person(name, age, sex, rmb) values ('王浩川', 19, true, 2100.16);
+insert  into person(name, age, sex, rmb, word) values ('张坤', 20, true, 2300.16, '我是铁道游击队队长');
+
+-- 查询数据
+select * from person;
+select name, rmb from person;
+
+-- 删除数据
+delete from mytest.person p where p.name='林冲';
+
+-- 修改数据
+UPDATE person SET word = '我是雷军爸爸的爸爸' WHERE id = 3;

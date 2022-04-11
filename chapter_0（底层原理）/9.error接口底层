@@ -1,0 +1,44 @@
+ps: 1.error类型是go语言的一种内置类型，使用的时候不用特定去import,他本质上是一个接口
+    2.error接口需要通过定制才能调用：一、通过errors包去订制error； 二、通过fmt.Errorf()去订制；三、通过自定义的MyError块订制
+    3.实际上error只是一段错误信息，真正抛出异常并不是单纯靠error
+
+
+1.error接口的源码：
+                //error接口的定义格式
+                type error interface {
+                    Error() string //Error()是每一个订制的error对象需要填充的错误消息,可以理解成是一个字段Error
+                }
+
+                //创建error对象
+                func New(text string) error {
+                    return &errorString{text}
+                }
+
+                // 声明错误字符串结构体
+                type errorString struct {
+                    s string
+                }
+
+                // 实现error接口的Error()方法，返回错误描述
+                func (e *errorString) Error() string {
+                    return e.s
+                }
+
+2.大部分函数或类方法需要返回错误，格式如下：
+                                    func Foo(param int) (n int, err error) {
+                                          // ...
+                                    }
+
+                                    func main() {
+                                        n, err := Foo(0)
+
+                                        if err != nil {
+                                            // 错误处理
+                                        } else {
+                                            // 使用返回值 n
+                                        }
+                                    }
+
+------------------------------------------------------------------------------------------------------------------------
+1.go语言error是一普通的值，实现方式为简单一个接口。
+2.创建error，使用errors.New()，返回的是errorString结构体 实现了error接口的Error()方法

@@ -1,0 +1,33 @@
+-- 创建库
+create database mytest;
+
+-- 删除库
+drop database mytest;
+
+-- 查看库
+show databases;
+
+-- 切换库
+use mytest;
+
+
+
+
+-- 创建表
+create table person (
+                        id int primary key auto_increment,
+                        name varchar(20),
+                        age int,
+                        sex bool,
+                        rmb float,
+                        word tinytext
+);
+
+-- 删除表
+drop table person;
+
+-- 查看表
+show tables;
+
+-- 修改表
+ALTER table person

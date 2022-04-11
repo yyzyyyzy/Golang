@@ -1,0 +1,27 @@
+1.下载安装redis 6.0.1
+2.解压到D:/Redis
+3.修改redis.windows.conf ：maxmemory 1073741824 //最大内存
+                          requirepass root //密码
+                          注释掉bind 127.0.0.1，取消和本机的绑定
+                          修改protected-mode yes为protected-mode no，取消保护模式
+
+4.cmd输入 redis-server.exe redis.windows.conf 打开redis服务器
+5.打开redis_GUI作为redis的客户端 /cmd输入 redis-cli.exe
+
+6.redis-cli --stat -a 123456 // 查看服务状态
+    monitor // 监视服务端收到的信息
+    select 15 // 切换数据库（共提供16个数据库）
+7.info clients 查看客户端的连接数
+  config get maxclients 查看最大的连接数
+
+
+
+linux:
+-- sudo gedit /etc/redis/redis.conf:
+                                maxmemory 1073741824    //最大内存
+                                requirepass root        //密码
+                                #bind 127.0.0.1，       //取消和本机的绑定
+                                修改protected-mode yes为protected-mode no，取消保护模式
+
+-- sudo systemctl stop firewalld                //关闭或配置防火墙，允许远程访问Redis：
+-- redis-cli -h 192.168.23.181 -p 6379 -a root  //远程连接

@@ -1,0 +1,17 @@
+1.支持多个条件的匹配
+2.case与case之间不需要break，自带中断
+3.按照switch-case-default的流程写
+
+func main() {
+
+    score := 70
+    switch {
+
+    case score == 70:
+        fmt.Println("达标")
+    case secore == 60:
+        fmt.Println("勉强达标")
+    default:
+        fmt.Println("不达标")
+    }
+}

@@ -1,0 +1,10 @@
+1.作用
+go build：用于测试编译包，在项目目录下生成可执行文件（有main包）
+go install：主要用来生成库和工具。
+
+2. 相同点
+都能生成可执行文件
+
+3. 不同点
+go build 不能生成包文件, go install 可以生成包文件
+go build 生成可执行文件在当前目录下， go install 生成可执行文件在bin目录下

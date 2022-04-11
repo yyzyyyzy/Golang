@@ -1,0 +1,10 @@
+第一步 编辑.go文件
+第二步 使用cd 进入.go文件目录
+第三步 将.go.文件 go bulid xxx.go为 xxx.exe文件
+第四步 将xxx.exe文件直接运行.\xxx.exe或者 go run xxx.exe
+
+指定文件名 go build -o mymain.exe main.go
+
+快捷键shift+alt+👇向下复制
+
+扩展包、变量等如果没有使用，那么报错

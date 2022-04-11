@@ -1,0 +1,7 @@
+sadd mset 1 2 3 4 // 向集合mset中添加元素1,2,3,4
+smembers mset // 查看集合mset中的元素
+scard mset // 查询集合元素个数
+sinter mset mset2 //求mset和mset2的交集
+sdiff mset mset2 //求mset相比mset2的差集（mset有而mset2无的部分）
+sunion mset mset2 // 求mset和mset2的并集
+sismember mset 3 //判断3是否是mset中的元素

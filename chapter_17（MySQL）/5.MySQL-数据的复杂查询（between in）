@@ -1,0 +1,10 @@
+-- in(作用是查询某个范围内的数据)
+-- 查询有北京市和南京市的所有信息
+desc t_city;
+select * from t_city where CityName in ('北京市','南京市');
+
+-- between(查询某个范围内的数据)
+-- 查询ProID在[10,20]的所有省份
+
+desc t_province;
+select * from t_province where ProID between 10 and 20

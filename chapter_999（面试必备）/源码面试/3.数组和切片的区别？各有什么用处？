@@ -1,0 +1,91 @@
+1.数组数组是定长的，长度定义好之后，不能再更改，是一片连续的内存地址
+2.slice 是对数组的封装，用来描述数组的一个片段，实际上是一个结构体，包含三个字段，底层数组、长度、容量：
+    type slice struct {
+        array unsafe.Pointer // 元素指针
+        len   int // 长度
+        cap   int // 容量
+
+3.数组作为函数传递时需要定长 func main(array [10]int) {}
+  切片作为函数传递时不需要定长 func main(slice []int) {}
+
+4.数组和切片大部分都是创建在堆区，栈区负责参数、返回值传递
+5.数组作为函数参数传递是值传递，形参（main函数栈帧）和实参（被调用函数栈帧）是不同的地址，形参不能改变实参；
+  切片作为函数参数传递是引用传递（传递切片名），切片地址作为实参传给形参（被调用函数栈帧），形参可以改变实参。
+
+
+func swap(a ,b int) {
+    a ,b = b ,a
+}
+
+func main() {
+    a := 10
+    b := 20
+    swap(a, b)
+
+    fmt.Println(a, b) //值传递形参不会影响到实参
+}
+
+特殊情况: 当原切片的容量不够存储append新增加的元素，那么会在堆区新开辟内存空间并拷贝元素，被调用函数的参数栈帧指向堆区新的内存地址；
+         此时形参的改变会影响到实参
+
+
+------------------------------------------------------------------------------------------------------------------------
+1.数组数组是定长的，长度定义好之后，不能再更改，是一片连续的内存地址
+2.slice 是对数组的封装，实际上是一个结构体，包含三个字段，底层数组、长度、容量：
+    type slice struct {
+        array unsafe.Pointer // 元素指针
+        len   int // 长度
+        cap   int // 容量
+3.数组作为函数参数传递是值传递，形参（main函数栈帧）和实参（被调用函数栈帧）是不同的地址，形参不能改变实参；
+  切片作为函数参数传递是引用传递（传递切片名），切片地址作为实参传给形参（被调用函数栈帧），形参可以改变实参。
+
+4.由于切片不是定长的，所以切片有自己的扩容机制：
+    1.源码包src\runtime\slice.go
+    2.newcap是扩容后的容量，先根据原切片的长度、容量和要添加的元素个数确定newcap大小，最后再对newcap做内存对齐得到最后的newcap。
+      进行内存对齐之后，新 slice 的容量是要 大于等于老 slice 容量的2倍或者1.25倍。
+    3.之后，向 Go 内存管理器申请内存，会匹配到足够大且最接近的规格，将老 slice 中的数据复制过去，并且将 append 的元素添加到新的底层数组中。
+    4.最后，向 growslice 函数调用者返回一个新的 slice，这个 slice 的长度并没有变化，而容量却增大了。
+
+    例如：
+        s := []int{1, 2}
+        s = append(s, 4, 5, 6)
+        fmt.Printf("len=%d, cap=%d", len(s), cap(s)) //为什么运行结果为len=5, cap=6
+
+    1.预估扩容后的容量，扩容前容量为2，如果扩容前的容量的两倍仍然小于所需最小容量，那么预估容量等于所需最小容量
+    2.否则直接看扩容前的元素个数是否小于1024，小于就直接容量翻倍；若大于1024，则扩容至1.25倍
+    3.内存对齐：使用预估容量乘以元素类型大小得到所需内存，将预估申请内存匹配到合适的内存规格
+
+
+package main
+
+import "fmt"
+
+func main() {
+    s := []int{1,2}
+    s = append(s,4,5,6)
+    fmt.Printf("len=%d, cap=%d",len(s),cap(s))
+}
+
+1.为什么运行结果为len=5, cap=6
+
+func growslice(et *_type, old slice, cap int) slice {
+    // ……
+    newcap := old.cap
+    doublecap := newcap + newcap
+    if cap > doublecap {
+        newcap = cap
+    } else {
+        // ……
+    }
+    // ……
+
+    capmem = roundupsize(uintptr(newcap) * ptrSize)
+    newcap = int(capmem / ptrSize)
+}
+
+1.首先newcap由growslice函数算出为newcap=5
+2.ptrSize是指一个指针的大小，在64位机上是8，调用了 roundupsize 函数，传入 40
+3.newcap内存对齐class_to_size[size_to_class8[(size+smallSizeDiv-1)/smallSizeDiv]]
+4.我们传进去的 size 等于 40。所以 (size+smallSizeDiv-1)/smallSizeDiv = 5；
+  获取 size_to_class8 数组中索引为 5 的元素为 4；获取 class_to_size 中索引为 4 的元素为 48。
+  最终，新的 slice 的容量为 6：

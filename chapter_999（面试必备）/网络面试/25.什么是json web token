@@ -1,0 +1,24 @@
+①
+JWT的原理是，服务器认证以后，生成一个JSON对象，发回给用户,如下所示
+{  "data": ".......", "expires": "7730123010203" }
+服务器在生成这个对象的时候加上签名。
+经过一系列加密和签名算法之后，JWT变成了这样的结构的一个具有有效期的字符串（是否有效服务端会根据expires判断）
+Base64URL(header).base64UrlEncode(payload).HMACSHA256(Base64URL(header).base64UrlEncode(payload), secret )
+
+这个字符串你可以把它放在Cookie里面自动发送，但是这样不能跨域，
+所以更好的做法是放在HTTP请求的头信息Authorization字段里面。
+Authorization: Bearer <token>
+
+②
+客户端发送username/password
+服务端验证username/password，密码正确生成Token给客户端
+客户端保存Token，访问接口时在URL参数/HTTP header中加入Token
+服务端解码Token进行授权，返回客户端需要的数据
+
+③
+Token和cookie、session相比：
+不依赖Cookie，不需要存储Session，防止一定的CSRF攻击，
+但是Token的过期时间无法修改，只能等待Token过期。
+
+④JWT被他人恶意重复登录怎么办
+使用一种用户唯一判断的标识字段：第一次签发的IP地址

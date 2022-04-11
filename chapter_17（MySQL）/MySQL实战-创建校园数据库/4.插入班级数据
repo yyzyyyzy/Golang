@@ -1,0 +1,4 @@
+insert into clazz(name) values ('丐帮');
+insert into clazz(name) values ('小刀会');
+insert into clazz(name) values ('斧头帮');
+insert into clazz(name) values ('天地会');

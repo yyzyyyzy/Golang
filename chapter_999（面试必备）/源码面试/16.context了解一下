@@ -1,0 +1,145 @@
+Context的作用：
+1.在Go 里，我们不能直接杀死协程，协程的关闭一般会用 channel+select 方式来控制。
+ 但是在某些场景下，例如处理一个请求衍生了很多协程，这些协程之间是相互关联的：
+ 需要共享一些全局变量、有共同的 deadline 等，而且可以同时被关闭。再用 channel+select 就会比较麻烦，这时就可以通过 context 来实现。
+
+2.准确说它是 goroutine 的上下文，包含 goroutine 的运行状态、环境、现场等信息。并发控制和超时控制
+  context 主要用来在 goroutine 之间传递上下文信息，包括：取消信号、超时时间、截止时间、k-v 等。
+
+Context原理：
+1.Context 是一个接口，定义了 4 个方法，它们都是幂等的。也就是说连续多次调用同一个方法，得到的结果都是相同的。
+    type Context interface {
+        Done() <-chan struct{}                      // 当 context 被取消或者到了 deadline，返回一个被关闭的 channel
+        Err() error                                 // 在 channel Done 关闭后，返回 context 取消原因
+        Deadline() (deadline time.Time, ok bool)    // 返回 context 是否会被取消以及自动取消时间（即 deadline）
+        Value(key interface{}) interface{}          // 获取 key 对应的 value
+    }
+
+    type canceler interface {
+    	cancel(removeFromParent bool, err error)
+    	Done() <-chan struct{}
+    }
+
+2.实现了上面定义的两个方法的 Context，就表明该 Context 是可取消的。
+
+
+3.emptyCtx：空结构体实现了Context方法，所以，这实际上是一个空的 context，永远不会被 cancel，没有存储值，也没有 deadline。
+    type emptyCtx int
+
+    func (*emptyCtx) Deadline() (deadline time.Time, ok bool) {
+    	return
+    }
+
+    func (*emptyCtx) Done() <-chan struct{} {
+    	return nil
+    }
+
+    func (*emptyCtx) Err() error {
+    	return nil
+    }
+
+    func (*emptyCtx) Value(key interface{}) interface{} {
+    	return nil
+    }
+  被包装成：
+    var (
+        background = new(emptyCtx)
+        todo       = new(emptyCtx)
+    )
+  通过下面两个导出的函数（首字母大写）对外公开：
+    func Background() Context {
+        return background           //background 通常用在 main 函数中，作为所有 context 的根节点。
+    }
+
+    func TODO() Context {
+        return todo                 //todo 通常用在并不知道传递什么 context的情形。
+    }
+
+4.cancelCtx：这是一个可以取消的 Context，实现了 canceler 接口。它直接将接口 Context 作为它的一个匿名字段，这样，它就可以被看成一个 Context
+    type cancelCtx struct {
+    	Context
+    	mu       sync.Mutex         //保护之后的字段
+    	done     chan struct{}
+    	children map[canceler]struct{}
+    	err      error
+    }
+
+  1.Done函数返回的是一个只读的 channel，而且没有地方向这个 channel 里面写数据。所以，直接调用读这个 channel，协程会被 block 住。
+    一般通过搭配 select 来使用。一旦关闭，就会立即读出零值:
+    func (c *cancelCtx) Done() <-chan struct{} {
+        ...
+    }
+  2.cancel() 方法的功能就是关闭 channel:
+    func (c *cancelCtx) cancel(removeFromParent bool, err error) {
+        ...
+    }
+  3.可取消的 Context 的方法（WithCancel）:
+    func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
+        c := newCancelCtx(parent)
+        propagateCancel(parent, &c)
+        return &c, func() { c.cancel(true, Canceled) }
+    }
+
+    func newCancelCtx(parent Context) cancelCtx {
+        return cancelCtx{Context: parent}
+    }
+
+------------------------------------------------------------------------------------------------------------------------
+Context的作用：
+1.在Go 里，我们不能直接杀死协程，协程的关闭一般会用 channel+select 方式来控制。
+ 但是在某些场景下，例如处理一个请求衍生了很多协程，这些协程之间是相互关联的：
+ 需要共享一些全局变量、有共同的 deadline 等，而且可以同时被关闭。再用 channel+select 就会比较麻烦，这时就可以通过 context 来实现。
+
+2.Context可以概括为一个接口（Context），四种具体实现（emptyCtx、cancelCtx、timerCtx、ValueCtx），6个函数（Background、TODO、WithCancel、WithDeadline、WithTimeout、WithValue）
+3.Context提供了四种方法：
+    type Context interface {
+            Done() <-chan struct{}                      // 当 context 被取消或者到了 deadline，返回一个被关闭的 channel
+            Err() error                                 // 在 channel Done 关闭后，返回 context 取消原因
+            Deadline() (deadline time.Time, ok bool)    // 返回 context 是否会被取消以及自动取消时间（即 deadline）
+            Value(key interface{}) interface{}          // 获取 key 对应的 value
+    }
+4.emptyCtx本质上是个整型，*emptyCtx对Context接口的实现只是简单地返回nil、false;
+5.Background和TODO两个函数都会创建emptyCtx：
+    1.Background用于在初始化时获取一个Context
+        ctx := context.Background //ctx是一个非空接口{<contetx类型元数据，*emptyCtx类型元数据>，data=0}
+    2.TODO函数是用于在外层函数留下Context却没有位置留只能留下一个TODO函数占位置
+6.cancelCtx：这是一个可以取消的Context
+    type cancelCtx struct {
+        Context
+        mu       sync.Mutex             //保护以下三个字段的线程安全锁
+        done     chan struct{}          //获取Context取消的通知
+        children map[canceler]struct{}  //存储以当前结点为根节点的所有可取消的context，根节点取消，子节点一并取消
+        err      error                  //取消时指定的错误信息
+    }
+7.WithCancel：把一个Context包装成CancelCtx并提供一个取消函数CancelFunc，调用CancelFunc可以取消对应的Context
+    ctx, cancel := WithCancel(ctx)  //ctx为非空接口类型{<Context，*CancelCtx>，data指向cancelCtx结构体{父级Context,mu,done,children,err}}
+8.timerCtx:在cancelCtx的基础上进一步封装了定时器和截止时间，可以根据具体情况取消和定时取消
+    type timerCtx struct {
+    	cancelCtx
+    	timer *time.Timer //定时器
+
+    	deadline time.Time //截止时间
+    }
+9.Context形成一棵Context树，每个Context都可以创建多个Context，可取消的Context都会被注册到离他最近的父节点中，结点的取消只会影响到以它为根节点的Context
+10.ValueCtx：用来支持键值对打包,ValueCtx通过Context字段形成了链表结构
+    type valueCtx struct {
+        Context
+        key, val interface{}
+    }
+    1.WithValue函数可以给Context附加一个键值对信息
+    func WithValue(parent Context, key, val interface{}) Context {
+    	if key == nil {
+    		panic("nil key")
+    	}
+    	if !reflect.TypeOf(key).Comparable() {
+    		panic("key is not comparable")
+    	}
+    	return &valueCtx{parent, key, val}
+    }
+    2.最好不要使用基础类型作为key，不然会发生子节点覆盖父节点的情况，最好使用自定义类型包装一下（type keyString string）
+    func (c *valueCtx) Value(key interface{}) interface{} {
+    	if c.key == key {
+    		return c.val
+    	}
+    	return c.Context.Value(key)
+    }
