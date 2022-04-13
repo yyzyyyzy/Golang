@@ -1,3 +1,4 @@
+Windows下微服务使用：
 1.下载相关包：
     go get -u -v github.com/go-log/log
     go get -u -v github.com/gorilla/handlers
@@ -17,5 +18,90 @@
     2.go build -o micro main.go
 
 3.protobuf插件下载：
-    1.go get -u github.com/golang/protobuf/{proto,proto-gen-go}
-    2.go get -u github.com/micro/protoc-gen-micro
+    1.go get github.com/golang/protobuf
+    2.进入github.com/golang/protobuf/protoc-gen-go
+    3.go build .
+    4.go get -u github.com/micro/protoc-gen-micro
+
+
+
+Linux下微服务使用：
+1.先装Protoc
+    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.20.0/protobuf-all-3.20.0.zip
+
+    $ unzip protoc-all-3.20.0.zip
+
+    $ cd protobuf-all-3.20.0
+
+    $ ./configure
+
+    $ make
+
+    $ make install
+
+    $ protoc --version
+
+    异常：
+
+    有些依赖没有安装， 大部分有提示：
+
+    // 例如：make => No targets specified and no makefile found. Stop.
+
+    sudo apt update
+
+    sudo apt install gcc
+
+    apt install gcc build-essential
+
+    // make install => no permission
+
+    sudo make install
+
+    // protoc --version => no such file or directory
+
+    在命令行执行：sudo ldconfig
+
+2.  $ go get github.com/golang/protobuf
+
+    $ cd github.com/golang/protobuf/protoc-gen-go
+
+    $ go build .
+
+3.将protoc-gen-go放入gopath/bin/目录下
+
+4.编写hello.proto测试
+        syntax = "proto3";
+
+        option go_package="./;hello";
+        package hello;
+
+        message Hello {
+
+            string name = 1;
+            int32 age = 2;
+            string addr = 3;
+
+        }
+
+5.protoc --go_out=./ hello.proto                  针对rpc生成go文件
+  protoc --go_out=plugins=grpc:. hello.proto      针对grpc生成go文件
+
+6.下载go-micro相关包
+    go get -u -v github.com/go-log/log
+    go get -u -v github.com/gorilla/handlers
+    go get -u -v github.com/gorilla/mux
+    go get -u -v github.com/gorilla/websocket
+    go get -u -v github.com/mitchellh/hashstructure
+    go get -u -v github.com/nlopes/slack
+    go get -u -v github.com/pborman/uuid
+    go get -u -v github.com/serenize/snaker
+
+    go get -u -v github.com/hashicorp/consul
+    go get -u -v github.com/miekg/dns
+
+7.下载go-micro
+    go get -u -v github.com/micro/micro
+
+    $ cd github.com/micro/micro
+
+    $ go build -o micro main.go
