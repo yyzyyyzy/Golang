@@ -1,0 +1,29 @@
+Log file created at: 2022/05/21 12:21:29
+Running on machine: 生产力工具
+Binary: Built with gc go1.18 for windows/amd64
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+
+E0521 12:21:29.632816   10340 1.glog标准库.go:24] This is error message
+E0521 12:21:29.633932   10340 1.glog标准库.go:25] This is error message: 12345
+E0521 12:21:29.633932   10340 proc.go:250] This is error message12345
+F0521 12:21:29.633932   10340 1.glog标准库.go:28] This is fatal message
+
+goroutine 1 [running]:
+github.com/golang/glog.stacks(0x1)
+	E:/go/src/github.com/golang/glog/glog.go:769 +0x8a
+github.com/golang/glog.(*loggingT).output(0xd569a0, 0x3, 0xc00011a000, {0xcdd759?, 0x1?}, 0x1?, 0x0)
+	E:/go/src/github.com/golang/glog/glog.go:723 +0x46f
+github.com/golang/glog.(*loggingT).printDepth(0xc00005c060?, 0x24090?, 0xca699d?, {0xc000115e78, 0x1, 0x1})
+	E:/go/src/github.com/golang/glog/glog.go:646 +0xee
+github.com/golang/glog.(*loggingT).print(...)
+	E:/go/src/github.com/golang/glog/glog.go:637
+github.com/golang/glog.Fatal(...)
+	E:/go/src/github.com/golang/glog/glog.go:1128
+main.main()
+	E:/golandlearning/chapter_0（标准库）/1.glog标准库.go:28 +0x3fd
+
+goroutine 6 [chan receive]:
+github.com/golang/glog.(*loggingT).flushDaemon(0x0?)
+	E:/go/src/github.com/golang/glog/glog.go:882 +0x6a
+created by github.com/golang/glog.init.0
+	E:/go/src/github.com/golang/glog/glog.go:410 +0x1bf
