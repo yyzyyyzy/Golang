@@ -18,14 +18,17 @@ func main() {
 	fmt.Println(strconv.FormatFloat(3.1415926, 'f', 4, 64))
 	fmt.Println(strconv.Itoa(100))
 
-	//字符串——>其他类型
+	//字符串——>布尔类型
 	bool1, err1 := strconv.ParseBool("true")
 	if err1 != nil {
 		fmt.Println("类型转换错误")
 	} else {
 		fmt.Println(bool1)
 	}
-
+	//字符串——>数字
+	//参数1 数字的字符串形式
+	//参数2 数字字符串的进制 比如二进制 八进制 十进制 十六进制
+	//参数3 返回结果的bit大小 也就是int8 int16 int32 int64
 	int1, err2 := strconv.ParseInt("abc", 16, 64)
 	if err2 != nil {
 		fmt.Println("类型转换错误")
