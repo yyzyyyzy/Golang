@@ -44,6 +44,7 @@ func main() {
 	fmt.Println(strings.Split("916990143@qq.com", "@"))
 
 	//去除冗余 strings.Trim 返回string
+	//切割前缀使用TrimPrefix，切割后缀使用TrimSuffix
 	fmt.Println("")
 	fmt.Println(" Trim  函数的用法")
 	fmt.Println(strings.Trim(" !!! Achtung !!! ", "! ")) // 去除字符串头尾不需要的内容

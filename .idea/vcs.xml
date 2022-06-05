@@ -2,7 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/chapter_25（Gin-Vue项目-MySQL+Redis）/src/github.com/hpcloud/tail" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/chapter_25（Gin-Vue项目-MySQL+Redis）/src/github.com/liu-cn/json-filter" vcs="Git" />
   </component>
 </project>

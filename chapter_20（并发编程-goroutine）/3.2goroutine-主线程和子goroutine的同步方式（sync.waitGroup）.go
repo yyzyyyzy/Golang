@@ -7,9 +7,15 @@ import (
 	"sync"
 )
 
+//WaitGroup对象不是一个引用类型，在通过函数传值的时候需要使用地址
+//WaitGroup 对象内部有一个计数器，最初从0开始，它有三个方法：Add(), Done(), Wait() 用来控制计数器的数量
+//Add(n) 把计数器设置为n
+//Done() 每次把计数器-1
+//wait() 会阻塞代码的运行，直到计数器地值减为0
+
 func main() {
 
-	wait.Add(num) //等待一个协程
+	wait.Add(num)
 	for i := 0; i < 5; i++ {
 		go ReadMyFile(&wait)
 	}

@@ -16,7 +16,7 @@ var (
 
 var (
 	// the dir where souce file stored
-	rootPath string = "E:\\golandlearning\\chapter_26（伞兵-WEB框架）"
+	rootPath string = "E:\\golandlearning\\chapter_25（伞兵-WEB框架）"
 	// exclude these sub dirs
 	nodirs [5]string = [...]string{"/bitbucket.org", "/github.com", "/goplayer", "/uniqush", "/code.google.com"}
 	// the suffix name you care
