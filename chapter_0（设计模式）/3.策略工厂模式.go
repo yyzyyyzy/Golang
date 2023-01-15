@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-//策略模式
+// 策略模式
 const (
 	ORIGINAL_PRICE    = iota // 0
 	TEN_PERCENT_OFF          // 1
@@ -41,7 +41,7 @@ func (r *reduction) Price(cash float64) float64 {
 	return cash - count*r.discountMoney
 }
 
-//-------------------------------------------------
+// -------------------------------------------------
 // 策略 + 工厂模式
 // 生成具体策略的工厂
 type CashFactory struct {
@@ -63,13 +63,7 @@ func (c CashFactory) GetCashPrice(discountType int) Pricer {
 
 func main() {
 	var cf CashFactory
-	var price Pricer
-	price = cf.GetCashPrice(ORIGINAL_PRICE)
-	fmt.Println(price.Price(210))
-
-	price = cf.GetCashPrice(TEN_PERCENT_OFF)
-	fmt.Println(price.Price(210))
-
-	price = cf.GetCashPrice(FULL_100_MINUS_20)
-	fmt.Println(price.Price(210))
+	fmt.Println(cf.GetCashPrice(ORIGINAL_PRICE).Price(210))
+	fmt.Println(cf.GetCashPrice(TEN_PERCENT_OFF).Price(210))
+	fmt.Println(cf.GetCashPrice(FULL_100_MINUS_20).Price(210))
 }
