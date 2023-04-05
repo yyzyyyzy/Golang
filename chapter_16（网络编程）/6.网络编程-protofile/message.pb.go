@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-//订单请求参数
+// 订单请求参数
 type OrderRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -76,7 +76,7 @@ func (x *OrderRequest) GetTimeStamp() int64 {
 	return 0
 }
 
-//订单信息
+// 订单信息
 type OrderInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

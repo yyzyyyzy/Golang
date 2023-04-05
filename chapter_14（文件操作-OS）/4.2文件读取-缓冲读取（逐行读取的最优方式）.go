@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-//逐行读取占用内存较小，是开发的重点
+// 逐行读取占用内存较小，是开发的重点
 func ReadLineFile1() {
 	path := "E:\\golandlearning\\chapter_0（底层原理）\\7.method的值接收者.png"
 	file, err := os.Open(path)

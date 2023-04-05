@@ -43,8 +43,8 @@ func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 	r.handlers[key] = handler
 }
 
-//解析了:和*两种匹配符的参数，返回一个 map
-//例如/p/go/doc匹配到/p/:lang/doc，解析结果为：{lang: "go"}
+// 解析了:和*两种匹配符的参数，返回一个 map
+// 例如/p/go/doc匹配到/p/:lang/doc，解析结果为：{lang: "go"}
 func (r *router) getRoute(method string, path string) (*node, map[string]string) {
 	searchParts := parsePattern(path)
 	params := make(map[string]string)
@@ -73,7 +73,7 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 	return nil, nil
 }
 
-//在调用匹配到的handler前，将解析出来的路由参数赋值给了c.Params， 这样就能够在handler中，通过Context对象访问到具体的值了。
+// 在调用匹配到的handler前，将解析出来的路由参数赋值给了c.Params， 这样就能够在handler中，通过Context对象访问到具体的值了。
 func (r *router) handle(c *Context) {
 	n, params := r.getRoute(c.Method, c.Path)
 

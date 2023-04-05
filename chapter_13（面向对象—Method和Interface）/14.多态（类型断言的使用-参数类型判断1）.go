@@ -1,5 +1,6 @@
-//类型断言：由于golang接口值的类型是动态不固定的，需要看它的动态值的类型才能确定，所以需要类型断言
-//        switch-case-default和类型断言相结合
+// 类型断言：由于golang接口值的类型是动态不固定的，需要看它的动态值的类型才能确定，所以需要类型断言
+//
+//	switch-case-default和类型断言相结合
 package main
 
 import (

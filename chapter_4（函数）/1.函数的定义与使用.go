@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-//func 函数名() {}
+// func 函数名() {}
 func run() {
 	fmt.Println("跑啊")
 }

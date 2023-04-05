@@ -10,7 +10,7 @@ func main() {
 	fmt.Println(isPalindrome(s))
 }
 
-//双指针
+// 双指针
 func isPalindrome(s string) bool {
 	s = strings.ToLower(s) //大写转小写
 	left, right := 0, len(s)-1

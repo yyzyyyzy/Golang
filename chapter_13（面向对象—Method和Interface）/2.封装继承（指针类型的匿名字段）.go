@@ -2,20 +2,20 @@ package main
 
 import "fmt"
 
-//父类
+// 父类
 type person struct {
 	id   int
 	name string
 	age  int
 }
 
-//子类
+// 子类
 type GoodPeople struct {
 	*person //指针类型的匿名字段
 	score   int
 }
 
-//子类
+// 子类
 type BadPeople struct {
 	*person //指针类型的匿名字段
 	score   int

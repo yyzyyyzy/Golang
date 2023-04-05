@@ -7,8 +7,8 @@ type Doctor struct {
 	Sex  string
 }
 
-//类型断言
-//一个判断传入参数类型的函数
+// 类型断言
+// 一个判断传入参数类型的函数
 func judge(items ...interface{}) {
 	for index, v := range items {
 		switch v.(type) {

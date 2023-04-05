@@ -25,7 +25,7 @@ func main() {
 	fmt.Println(*response)
 }
 
-//从message.pb.go 拷贝的部分
+// 从message.pb.go 拷贝的部分
 type OrderRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

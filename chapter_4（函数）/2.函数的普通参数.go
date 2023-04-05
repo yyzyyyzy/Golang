@@ -2,12 +2,12 @@ package main
 
 import "fmt"
 
-//函数定义，参数定义
+// 函数定义，参数定义
 func test1(a int, b string) {
 	fmt.Printf("a=%d,b=%s\n", a, b)
 }
 
-//函数定义，参数定义
+// 函数定义，参数定义
 func test2(c, d int) {
 	sum := c + d
 	fmt.Println(sum)

@@ -2,7 +2,7 @@ package main
 
 import "net/http"
 
-//自定义handler接口
+// 自定义handler接口
 type myHandler struct{}
 
 func (m *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

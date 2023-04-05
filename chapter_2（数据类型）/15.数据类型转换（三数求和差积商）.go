@@ -1,5 +1,5 @@
-//类型转换
-//低类型向高类型转换（float32-->float64）
+// 类型转换
+// 低类型向高类型转换（float32-->float64）
 package main
 
 import "fmt"

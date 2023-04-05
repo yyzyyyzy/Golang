@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-//创建一个临时文件记录已经复制的字节数，复制完成之后删除这个临时文件
+// 创建一个临时文件记录已经复制的字节数，复制完成之后删除这个临时文件
 func ContinueSend(srcFileName, dstFileName, tempFileName string) {
 	srcfile, err := os.Open(srcFileName)
 	HandleError(err)

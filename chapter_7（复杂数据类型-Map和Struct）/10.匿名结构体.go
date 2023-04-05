@@ -5,18 +5,18 @@ import (
 	"fmt"
 )
 
-//定义手机屏幕
+// 定义手机屏幕
 type Screen01 struct {
 	Size       float64 //屏幕尺寸
 	ResX, ResY int     //屏幕分辨率 水平 垂直
 }
 
-//定义电池容量
+// 定义电池容量
 type Battery struct {
 	Capacity string
 }
 
-//返回json数据
+// 返回json数据
 func getJsonData() []byte {
 	//tempData 接收匿名结构体（匿名结构体使得数据的结构更加灵活）
 	tempData := struct {

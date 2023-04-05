@@ -1,6 +1,6 @@
 package main
 
-//1.实现单链表的结点
+// 1.实现单链表的结点
 type SingleLinkedListNode struct { //单链表的结点
 	value interface{}
 	next  *SingleLinkedListNode
@@ -21,7 +21,7 @@ func (node *SingleLinkedListNode) Next() interface{} { //返回结点
 	return node.Next
 }
 
-//2.实现单链表
+// 2.实现单链表
 type SingleLink interface {
 	//单链表的增删改查
 	GetFirstNode() *SingleLinkedListNode

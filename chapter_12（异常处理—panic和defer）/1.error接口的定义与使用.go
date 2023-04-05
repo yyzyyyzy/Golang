@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-//定义一个除数为0的错误对象
+// 定义一个除数为0的错误对象
 var errDivisionByZero = errors.New("除数为0")
 
 func div(dividend int, divisor int) (int, error) {

@@ -46,7 +46,7 @@ type Account struct {
 	money int
 }
 
-//取钱（需要并发安全，加锁）
+// 取钱（需要并发安全，加锁）
 func (a *Account) Get(n int) {
 	mutex.Lock()
 	fmt.Println("取钱 开始")
@@ -56,7 +56,7 @@ func (a *Account) Get(n int) {
 	mutex.Unlock()
 }
 
-//存钱（需要并发安全，加锁）
+// 存钱（需要并发安全，加锁）
 func (a *Account) Save(n int) {
 	mutex.Lock()
 	fmt.Println("存钱 开始")
@@ -66,7 +66,7 @@ func (a *Account) Save(n int) {
 	mutex.Unlock()
 }
 
-//查询（无需并发安全）
+// 查询（无需并发安全）
 func (a *Account) Query() {
 	fmt.Println("查询 开始")
 	<-time.After(time.Second * 3)

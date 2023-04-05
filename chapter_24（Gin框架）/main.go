@@ -141,7 +141,7 @@ func isPhoneExist(db *sqlx.DB, phone string) bool {
 	return false
 }
 
-//jwt用户认证
+// jwt用户认证
 var jwtKey = []byte("a_secret_key")
 
 type Claims struct {

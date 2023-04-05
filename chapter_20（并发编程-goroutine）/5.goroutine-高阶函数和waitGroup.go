@@ -20,7 +20,7 @@ func main() {
 
 var wait3 = new(sync.WaitGroup)
 
-//小写转大写函数
+// 小写转大写函数
 func toUpperSync(word string, f func(string)) {
 	go func() {
 		f(strings.ToUpper(word))

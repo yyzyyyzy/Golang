@@ -8,7 +8,7 @@ func main() {
 
 }
 
-//暴力
+// 暴力
 func twoSum1(nums []int, target int) []int {
 	for i, v := range nums { //i第一个索引的位置
 		for j := i + 1; j < len(nums); j++ { //j第二个索引的位置
@@ -20,7 +20,7 @@ func twoSum1(nums []int, target int) []int {
 	return nil
 }
 
-//哈希表
+// 哈希表
 func twoSum2(nums []int, target int) []int {
 	hash := make(map[int]int)
 	for i, v := range nums { //i第二个数的索引

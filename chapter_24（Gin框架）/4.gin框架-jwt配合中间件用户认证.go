@@ -54,7 +54,7 @@ func ParseToken(tokenString string) (*jwt.Token, *Claims, error) {
 	return token, claims, err
 }
 
-//中间件配合token验证
+// 中间件配合token验证
 func AuthMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		// 1.获取authorization header

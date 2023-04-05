@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-//scanln是fscanln的封装
+// scanln是fscanln的封装
 func main() {
 	var num int
 	fmt.Scanln(&num)

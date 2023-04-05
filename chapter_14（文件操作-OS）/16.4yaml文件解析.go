@@ -5,14 +5,14 @@ import (
 	"io/ioutil"
 )
 
-//Nginx nginx  配置
+// Nginx nginx  配置
 type Nginx struct {
 	Port    int    `yaml:"Port"`
 	LogPath string `yaml:"LogPath"`
-	Path    string `yaml:"Path"`
+	Path    string `yaml:"path"`
 }
 
-//Config   系统配置配置
+// Config   系统配置配置
 type Config struct {
 	Name      string `yaml:"SiteName"`
 	Addr      string `yaml:"SiteAddr"`

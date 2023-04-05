@@ -1,6 +1,6 @@
 package handler
 
-//可以解决微服务名称冲突问题
+// 可以解决微服务名称冲突问题
 const HelloServiceName = "handler/HelloService"
 
 type HelloService struct{}

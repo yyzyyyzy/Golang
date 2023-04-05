@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-//空接口可以接收任意类型，适合容器设计
+// 空接口可以接收任意类型，适合容器设计
 type Dictionary struct {
 	data map[interface{}]interface{} //key和value都是接口类型
 }

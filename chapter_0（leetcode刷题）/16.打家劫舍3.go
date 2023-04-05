@@ -6,7 +6,7 @@ type TreeNode struct {
 	Right *TreeNode
 }
 
-//后序遍历+动态规划
+// 后序遍历+动态规划
 func rob(root *TreeNode) int {
 	val := dfs(root)
 	return max(val[0], val[1])

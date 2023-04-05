@@ -10,7 +10,7 @@ type fileWriter struct {
 	file *os.File
 }
 
-//设置文件写入器 写入的文件名
+// 设置文件写入器 写入的文件名
 func (f *fileWriter) SetFile(filename string) (err error) {
 	if f.file != nil {
 		f.file.Close()
@@ -28,7 +28,7 @@ func (f *fileWriter) Write(data interface{}) error {
 	return err
 }
 
-//创建文件写入器实例
+// 创建文件写入器实例
 func NewFileWriter() *fileWriter {
 	return &fileWriter{}
 }

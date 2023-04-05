@@ -5,13 +5,12 @@ import (
 	"fmt"
 )
 
-//定义一个正方形的结构体
+// 定义一个正方形的结构体
 type Rectangle struct {
 	width  int
 	height int
 }
 
-//
 func (rec *Rectangle) Area() int {
 	return rec.width * rec.width
 }

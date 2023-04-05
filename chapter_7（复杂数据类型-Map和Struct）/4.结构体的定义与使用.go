@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-//结构体定义在值函数外部
+// 结构体定义在值函数外部
 type good_people struct {
 	Id     int
 	Name   string

@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-//结构体嵌套
+// 结构体嵌套
 type bad_people struct {
 	id, age int
 	name    string

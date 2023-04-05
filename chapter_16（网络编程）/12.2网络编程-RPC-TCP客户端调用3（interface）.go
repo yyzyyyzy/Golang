@@ -18,12 +18,12 @@ type FuckingServiceClient struct {
 
 var _ FuckingServiceInterface = (*FuckingServiceClient)(nil) //匿名遍历
 
-//客户端调用实际方法
+// 客户端调用实际方法
 func (f FuckingServiceClient) Fuck(penis string, vegina *string) error {
 	return f.Client.Call(FuckingServiceName+".Fuck", penis, vegina)
 }
 
-//客户端远程调用
+// 客户端远程调用
 func DialFuckingService(network, address string) (*FuckingServiceClient, error) {
 	conn, err := rpc.Dial(network, address)
 	if err != nil {

@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-//读取到file中，再利用ioutil将file直接读取到[]byte中（适合文件不大的情况，全部读取会占用较大内存）
-//ioutil是读写工具包
+// 读取到file中，再利用ioutil将file直接读取到[]byte中（适合文件不大的情况，全部读取会占用较大内存）
+// ioutil是读写工具包
 func ReadFile() {
 	path := "E:\\golandlearning\\chapter_0（底层原理）\\4.slice的底层数据结构？append()底层原理，扩容机制？"
 	file, err := os.Open(path)

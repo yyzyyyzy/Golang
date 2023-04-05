@@ -1,5 +1,5 @@
-//单引号表示字符，双引号表示字符串
-//字符类型（byte）uint8类型等价
+// 单引号表示字符，双引号表示字符串
+// 字符类型（byte）uint8类型等价
 package main
 
 import "fmt"

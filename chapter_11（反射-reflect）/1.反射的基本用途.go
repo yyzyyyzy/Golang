@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-//声明一下结构体
+// 声明一下结构体
 type Test struct {
 	Name string
 	Age  int8

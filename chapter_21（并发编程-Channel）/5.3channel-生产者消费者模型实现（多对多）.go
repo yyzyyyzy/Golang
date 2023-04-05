@@ -39,7 +39,7 @@ func main() {
 	wgc.Wait()      // 等待消费者退出
 }
 
-//如果 stop 标志不为 false，不断地往通道里面放 product，完成之后信号量完成
+// 如果 stop 标志不为 false，不断地往通道里面放 product，完成之后信号量完成
 func producer(wg *sync.WaitGroup, products chan<- Product, name int, stop *bool) {
 	for !*stop {
 		product := Product{name: name, value: rand.Int()}
@@ -50,7 +50,7 @@ func producer(wg *sync.WaitGroup, products chan<- Product, name int, stop *bool)
 	wg.Done()
 }
 
-//不断地从通道里面取 product，然后作对应的处理，直到通道被关闭，并且 products 里面为空，for 循环才会终止，而这正是我们期望的
+// 不断地从通道里面取 product，然后作对应的处理，直到通道被关闭，并且 products 里面为空，for 循环才会终止，而这正是我们期望的
 func consumer(wg *sync.WaitGroup, products <-chan Product, name int) {
 	for product := range products {
 		fmt.Printf("consumer %v consume a product: %#v\n", name, product)

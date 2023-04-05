@@ -8,7 +8,7 @@ type friends struct {
 	age  int
 }
 
-//数组类型的结构体（值传递）
+// 数组类型的结构体（值传递）
 func bubbleSort1(arr [3]friends) {
 	for i := 0; i < len(arr)-1; i++ {
 		for j := 0; j < len(arr)-1-i; j++ {
@@ -20,7 +20,7 @@ func bubbleSort1(arr [3]friends) {
 	fmt.Println(arr)
 }
 
-//切片类型的结构体（引用传递）
+// 切片类型的结构体（引用传递）
 func bubbleSort2(arr []friends) {
 	for i := 0; i < len(arr)-1; i++ {
 		for j := 0; j < len(arr)-1-i; j++ {

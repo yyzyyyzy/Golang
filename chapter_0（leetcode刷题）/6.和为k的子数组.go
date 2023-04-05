@@ -6,7 +6,7 @@ import "fmt"
 //输入：nums = [1,1,1], k = 2
 //输出：2
 
-//暴力枚举
+// 暴力枚举
 func subarraySum1(nums []int, k int) int {
 	count := 0
 	for i := 0; i < len(nums); i++ { //0，1，2
@@ -21,8 +21,9 @@ func subarraySum1(nums []int, k int) int {
 	return count
 }
 
-//前缀和+递归
-//pre[i]=num[0]+ ... + num[i]
+// 前缀和+递归
+// pre[i]=num[0]+ ... + num[i]
+//
 //	--> pre[i] = pre[i-1] + num[i]
 //		--> pre[i] - pre[j] = num[j+1] + num[j+2] + ... + num[i]
 //			--> 子数组和为k 可以转化为 pre[i] - pre[j-1] = k

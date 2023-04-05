@@ -37,7 +37,7 @@ func (this User) GetInfo() string {
 	return info
 }
 
-//结构体完成增删改查的操作
+// 结构体完成增删改查的操作
 type UserService struct {
 	users   []User
 	UserNum int
@@ -51,12 +51,12 @@ func NewUserService() *UserService {
 	return userService
 }
 
-//查询用户（切片方法）
+// 查询用户（切片方法）
 func (this *UserService) List() []User {
 	return this.users
 }
 
-//增加用户（切片方法）
+// 增加用户（切片方法）
 func (this *UserService) Add(user User) bool {
 	this.UserNum++
 	user.Id = this.UserNum
@@ -65,7 +65,7 @@ func (this *UserService) Add(user User) bool {
 	return true
 }
 
-//删除用户（切片方法）
+// 删除用户（切片方法）
 func (this *UserService) Delete(id int) bool {
 	index := this.FindById(id)
 	if index == -1 {
@@ -76,7 +76,7 @@ func (this *UserService) Delete(id int) bool {
 	}
 }
 
-//根据id查找客户在切片中对应的下标，如果没有客户，那么返回-1
+// 根据id查找客户在切片中对应的下标，如果没有客户，那么返回-1
 func (this *UserService) FindById(id int) int {
 	index := -1
 

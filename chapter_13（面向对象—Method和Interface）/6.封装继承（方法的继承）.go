@@ -2,12 +2,12 @@ package main
 
 import "fmt"
 
-//父类
+// 父类
 type dog struct {
 	name string
 }
 
-//子类
+// 子类
 type doggy struct {
 	dog
 	sex string
