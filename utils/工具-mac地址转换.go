@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -12,33 +13,28 @@ func main() {
 	flag.StringVar(&mac, "mac", "xx:xx:xx:xx", "please enter your mac")
 	flag.Parse()
 
-	//将mac地址转换为不包含 ":" 和 "-" 的字符串
-	strMac := ConvertChar(mac)
-	if len(strMac) > 12 {
-		panic("The correct format of the MAC address is: xx:xx:xx:xx")
+	formattedMac, err := FormatMacAddress(mac)
+	if err != nil {
+		log.Fatalf("Invalid MAC address format: %s. The correct format is xx:xx:xx:xx:xx:xx or xxxxxxxxxxxx", mac)
 	}
-	macSlice := []byte(strMac)
-
-	slice_1 := string(macSlice[0:2])
-	slice_2 := string(macSlice[2:4])
-	slice_3 := string(macSlice[4:6])
-	slice_4 := string(macSlice[6:8])
-	slice_5 := string(macSlice[8:10])
-	slice_6 := string(macSlice[10:12])
-
-	print(fmt.Sprintf(slice_1 + ":" + slice_2 + ":" + slice_3 + ":" + slice_4 + ":" + slice_5 + ":" + slice_6))
+	log.Println(formattedMac)
 }
 
-func ConvertChar(mac string) string {
-
+func FormatMacAddress(mac string) (string, error) {
 	mac = strings.ToLower(mac)
-
-	if strings.Contains(mac, "-") {
-		mac = strings.ReplaceAll(mac, "-", "")
-
+	mac = strings.ReplaceAll(mac, "-", "")
+	mac = strings.ReplaceAll(mac, ":", "")
+	if len(mac) != 12 {
+		return "", fmt.Errorf("Invalid MAC address length: %d", len(mac))
 	}
-	if strings.Contains(mac, ":") {
-		mac = strings.ReplaceAll(mac, ":", "")
+
+	var b strings.Builder
+	for i := 0; i < 12; i += 2 {
+		if i > 0 {
+			b.WriteByte(':')
+		}
+		b.WriteString(mac[i : i+2])
 	}
-	return mac
+
+	return b.String(), nil
 }
