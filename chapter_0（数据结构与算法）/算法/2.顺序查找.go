@@ -13,3 +13,14 @@ func SequentialSearch(arr []int, key int) int {
 	}
 	return -1
 }
+
+func main() {
+	arr := []int{1, 3, 2, 5, 4, 7, 6, 9, 8, 10}
+	key := 5
+	index := SequentialSearch(arr, key)
+	if index == -1 {
+		println("没有找到")
+	} else {
+		println("找到了，索引是：", index)
+	}
+}
