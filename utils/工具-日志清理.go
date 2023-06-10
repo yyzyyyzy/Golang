@@ -1,4 +1,4 @@
-package testLog
+package main
 
 import (
 	"github.com/golang/glog"
