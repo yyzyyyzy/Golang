@@ -46,7 +46,7 @@ type bmap struct {
     keys     [8]keytype
     values   [8]valuetype
     pad      uintptr
-    overflow uintptr
+    overflow uintptr    
 }
 
 bmap的overflow指针指向mapextra结构体：

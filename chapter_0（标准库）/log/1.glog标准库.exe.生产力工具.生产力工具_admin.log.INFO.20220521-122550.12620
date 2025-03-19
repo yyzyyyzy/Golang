@@ -1,8 +1,0 @@
-Log file created at: 2022/05/21 12:25:50
-Running on machine: 生产力工具
-Binary: Built with gc go1.18 for windows/amd64
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-I0521 12:25:50.506953   12620 1.glog标准库.go:37] LEVEL 3 message
-I0521 12:25:50.533106   12620 1.glog标准库.go:38] LEVEL 4 message
-I0521 12:25:50.533106   12620 1.glog标准库.go:39] LEVEL 5 message
-I0521 12:25:50.533106   12620 1.glog标准库.go:40] LEVEL 8 message

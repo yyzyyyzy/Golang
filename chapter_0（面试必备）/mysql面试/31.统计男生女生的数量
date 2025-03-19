@@ -1,0 +1,3 @@
+SELECT gender, COUNT(*) AS count
+FROM students
+GROUP BY gender;
